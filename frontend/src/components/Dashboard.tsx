@@ -2,6 +2,8 @@ import { useState, useEffect, useRef } from "react";
 import Header from "./Header";
 import Footer from "./Footer";
 import DiffractionViewer from "./DiffractionViewer";
+import MetricsGraph from "./MetricsGraph";
+import ResolutionShellChart from "./ResolutionShellChart";
 import "./Header.css";
 import "./Footer.css";
 import "./Dashboard.css";
@@ -68,7 +70,7 @@ export default function Dashboard() {
           }
           return prev + 1;
         });
-      }, 150); //ms playback!
+      }, 150);
     }
 
     return () => {
@@ -84,6 +86,8 @@ export default function Dashboard() {
   )}.png`;
   const status = isPlaying ? "running" : "paused";
   const currentFrameMetrics = metricsData?.frames[currentFrame - 1];
+
+  const historicalData = metricsData?.frames.slice(0, currentFrame) || [];
 
   return (
     <div className="dashboard-container">
@@ -138,58 +142,93 @@ export default function Dashboard() {
             <div className="panel-header">
               <h3>Quality Metrics</h3>
             </div>
-            <div className="canvas-content metrics-grid">
-              {currentFrameMetrics && metricsData && (
-                <>
-                  <div
-                    className={`metric-card ${
-                      metricsData.overall_statistics.resolution < 1.8
-                        ? "good"
-                        : "warning"
-                    }`}
-                  >
-                    <div className="metric-label">Resolution</div>
-                    <div className="metric-value">
-                      {metricsData.overall_statistics.resolution.toFixed(2)} Å
+            <div className="canvas-content">
+              <div className="metrics-grid">
+                {currentFrameMetrics && metricsData && (
+                  <>
+                    <div
+                      className={`metric-card ${
+                        metricsData.overall_statistics.resolution < 1.8
+                          ? "good"
+                          : "warning"
+                      }`}
+                    >
+                      <div className="metric-label">Resolution</div>
+                      <div className="metric-value">
+                        {metricsData.overall_statistics.resolution.toFixed(2)} Å
+                      </div>
+                      <div className="metric-note">Overall</div>
                     </div>
-                  </div>
-                  <div
-                    className={`metric-card ${
-                      currentFrameMetrics.overall_i_over_sigma > 15
-                        ? "good"
-                        : "warning"
-                    }`}
-                  >
-                    <div className="metric-label">I/σ(I)</div>
-                    <div className="metric-value">
-                      {currentFrameMetrics.overall_i_over_sigma.toFixed(1)}
+                    <div
+                      className={`metric-card ${
+                        currentFrameMetrics.overall_i_over_sigma > 15
+                          ? "good"
+                          : "warning"
+                      }`}
+                    >
+                      <div className="metric-label">I/σ(I)</div>
+                      <div className="metric-value">
+                        {currentFrameMetrics.overall_i_over_sigma.toFixed(1)}
+                      </div>
+                      <div className="metric-note">Current Frame</div>
                     </div>
-                  </div>
-                  <div
-                    className={`metric-card ${
-                      currentFrameMetrics.overall_completeness > 98
-                        ? "good"
-                        : "warning"
-                    }`}
-                  >
-                    <div className="metric-label">Completeness</div>
-                    <div className="metric-value">
-                      {currentFrameMetrics.overall_completeness.toFixed(1)}%
+                    <div
+                      className={`metric-card ${
+                        currentFrameMetrics.overall_completeness > 98
+                          ? "good"
+                          : "warning"
+                      }`}
+                    >
+                      <div className="metric-label">Completeness</div>
+                      <div className="metric-value">
+                        {currentFrameMetrics.overall_completeness.toFixed(1)}%
+                      </div>
+                      <div className="metric-note">Current Frame</div>
                     </div>
-                  </div>
-                  <div
-                    className={`metric-card ${
-                      metricsData.overall_statistics.r_merge < 0.12
-                        ? "good"
-                        : "warning"
-                    }`}
-                  >
-                    <div className="metric-label">R-merge</div>
-                    <div className="metric-value">
-                      {metricsData.overall_statistics.r_merge.toFixed(3)}
+                    <div
+                      className={`metric-card ${
+                        metricsData.overall_statistics.r_merge < 0.12
+                          ? "good"
+                          : "warning"
+                      }`}
+                    >
+                      <div className="metric-label">R-merge</div>
+                      <div className="metric-value">
+                        {metricsData.overall_statistics.r_merge.toFixed(3)}
+                      </div>
+                      <div className="metric-note">Overall</div>
                     </div>
-                  </div>
-                </>
+                  </>
+                )}
+              </div>
+
+              <div className="metrics-graphs">
+                {historicalData.length > 0 && (
+                  <>
+                    <MetricsGraph
+                      data={historicalData}
+                      currentFrame={currentFrame}
+                      metric="overall_i_over_sigma"
+                      label="I/σ(I) vs Frame"
+                      color="#00d9ff"
+                      threshold={15}
+                    />
+                    <MetricsGraph
+                      data={historicalData}
+                      currentFrame={currentFrame}
+                      metric="overall_completeness"
+                      label="Completeness vs Frame"
+                      color="#00ff88"
+                      threshold={95}
+                    />
+                  </>
+                )}
+              </div>
+
+              {currentFrameMetrics?.resolution_shells && (
+                <ResolutionShellChart
+                  shells={currentFrameMetrics.resolution_shells}
+                />
               )}
             </div>
           </div>
