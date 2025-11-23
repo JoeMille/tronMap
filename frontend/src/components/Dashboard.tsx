@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import Header from "./Header";
 import Footer from "./Footer";
 import DiffractionViewer from "./DiffractionViewer";
+import MetricsGraph from "./MetricsGraph";
 import "./Header.css";
 import "./Footer.css";
 import "./Dashboard.css";
@@ -141,23 +142,21 @@ export default function Dashboard() {
             </div>
             <div className="analytics-container">
               <div className="graphs-section">
-                <TechnicalGraph
+                <MetricsGraph
                   data={historicalData}
                   currentFrame={currentFrame}
                   metric="overall_i_over_sigma"
-                  label="I/σ(I)"
+                  label="I/σ(I) Signal Quality"
                   color="#00d9ff"
                   threshold={15}
-                  unit=""
                 />
-                <TechnicalGraph
+                <MetricsGraph
                   data={historicalData}
                   currentFrame={currentFrame}
                   metric="overall_completeness"
-                  label="Completeness"
+                  label="Data Completeness"
                   color="#00ff88"
                   threshold={95}
-                  unit="%"
                 />
               </div>
 
@@ -176,163 +175,6 @@ export default function Dashboard() {
       <Footer />
     </div>
   );
-}
-
-function TechnicalGraph({
-  data,
-  currentFrame,
-  metric,
-  label,
-  color,
-  threshold,
-  unit,
-}: {
-  data: FrameMetrics[];
-  currentFrame: number;
-  metric: "overall_i_over_sigma" | "overall_completeness";
-  label: string;
-  color: string;
-  threshold: number;
-  unit: string;
-}) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas || data.length === 0) return;
-
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-
-    const dpr = window.devicePixelRatio || 1;
-    const rect = canvas.getBoundingClientRect();
-    canvas.width = rect.width * dpr;
-    canvas.height = rect.height * dpr;
-    ctx.scale(dpr, dpr);
-
-    const width = rect.width;
-    const height = rect.height;
-    const padding = { top: 40, right: 30, bottom: 40, left: 60 };
-    const plotWidth = width - padding.left - padding.right;
-    const plotHeight = height - padding.top - padding.bottom;
-
-    ctx.fillStyle = "#000";
-    ctx.fillRect(0, 0, width, height);
-
-    const values = data.map((d) => d[metric] || 0);
-    const maxValue = Math.max(...values, threshold) * 1.1;
-    const minValue = Math.min(...values, 0) * 0.9;
-
-    ctx.strokeStyle = "#333";
-    ctx.lineWidth = 1;
-    for (let i = 0; i <= 5; i++) {
-      const y = padding.top + (plotHeight / 5) * i;
-      ctx.beginPath();
-      ctx.moveTo(padding.left, y);
-      ctx.lineTo(width - padding.right, y);
-      ctx.stroke();
-
-      const value = maxValue - ((maxValue - minValue) / 5) * i;
-      ctx.fillStyle = "#00d9ff";
-      ctx.font = "12px 'Courier New'";
-      ctx.textAlign = "right";
-      ctx.fillText(`${value.toFixed(1)}${unit}`, padding.left - 10, y + 4);
-    }
-
-    for (let i = 0; i <= 10; i++) {
-      const x = padding.left + (plotWidth / 10) * i;
-      ctx.strokeStyle = "#222";
-      ctx.beginPath();
-      ctx.moveTo(x, padding.top);
-      ctx.lineTo(x, height - padding.bottom);
-      ctx.stroke();
-
-      if (i % 2 === 0) {
-        const frameNum = Math.floor((data.length / 10) * i) + 1;
-        ctx.fillStyle = "#666";
-        ctx.font = "11px 'Courier New'";
-        ctx.textAlign = "center";
-        ctx.fillText(frameNum.toString(), x, height - padding.bottom + 20);
-      }
-    }
-
-    if (threshold) {
-      const thresholdY =
-        padding.top +
-        plotHeight -
-        ((threshold - minValue) / (maxValue - minValue)) * plotHeight;
-      ctx.strokeStyle = "#ff3333";
-      ctx.lineWidth = 2;
-      ctx.setLineDash([8, 4]);
-      ctx.beginPath();
-      ctx.moveTo(padding.left, thresholdY);
-      ctx.lineTo(width - padding.right, thresholdY);
-      ctx.stroke();
-      ctx.setLineDash([]);
-
-      ctx.fillStyle = "#ff3333";
-      ctx.font = "bold 11px 'Courier New'";
-      ctx.textAlign = "left";
-      ctx.fillText(
-        `THRESHOLD: ${threshold}${unit}`,
-        padding.left + 10,
-        thresholdY - 8
-      );
-    }
-
-    ctx.strokeStyle = color;
-    ctx.lineWidth = 2.5;
-    ctx.beginPath();
-
-    data.forEach((point, index) => {
-      const x = padding.left + (index / (data.length - 1 || 1)) * plotWidth;
-      const value = point[metric] || 0;
-      const y =
-        padding.top +
-        plotHeight -
-        ((value - minValue) / (maxValue - minValue)) * plotHeight;
-
-      if (index === 0) {
-        ctx.moveTo(x, y);
-      } else {
-        ctx.lineTo(x, y);
-      }
-    });
-
-    ctx.stroke();
-
-    const currentIndex = currentFrame - 1;
-    if (currentIndex >= 0 && currentIndex < data.length) {
-      const x =
-        padding.left + (currentIndex / (data.length - 1 || 1)) * plotWidth;
-      const value = data[currentIndex][metric] || 0;
-      const y =
-        padding.top +
-        plotHeight -
-        ((value - minValue) / (maxValue - minValue)) * plotHeight;
-
-      ctx.fillStyle = color;
-      ctx.beginPath();
-      ctx.arc(x, y, 6, 0, 2 * Math.PI);
-      ctx.fill();
-
-      ctx.strokeStyle = "#000";
-      ctx.lineWidth = 2;
-      ctx.stroke();
-    }
-
-    ctx.fillStyle = "#00d9ff";
-    ctx.font = "bold 16px 'Courier New'";
-    ctx.textAlign = "center";
-    ctx.fillText(label, width / 2, 25);
-
-    ctx.fillStyle = "#666";
-    ctx.font = "11px 'Courier New'";
-    ctx.textAlign = "center";
-    ctx.fillText("FRAME NUMBER", width / 2, height - 5);
-  }, [data, currentFrame, metric, color, threshold, label, unit]);
-
-  return <canvas ref={canvasRef} className="technical-graph" />;
 }
 
 function DataOutput({
