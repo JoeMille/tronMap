@@ -1,4 +1,9 @@
 import { useState, useEffect } from "react";
+import Header from "./Header";
+import Footer from "./Footer";
+import "./Header.css";
+import "./Footer.css";
+import "./Dashboard.css";
 
 interface Metrics {
   current_frame: number;
@@ -19,6 +24,7 @@ export default function Dashboard() {
   const [metrics, setMetrics] = useState<Metrics | null>(null);
   const datasetPath = "/static/data/lysozyme_good";
 
+  // load metrics
   useEffect(() => {
     fetch(`${datasetPath}/metrics.json`)
       .then((res) => res.json())
@@ -26,6 +32,7 @@ export default function Dashboard() {
       .catch((err) => console.error("Failed to load metrics:", err));
   }, []);
 
+  //auto-play
   useEffect(() => {
     if (!isPlaying || !metrics) return;
 
@@ -37,7 +44,7 @@ export default function Dashboard() {
         }
         return prev + 1;
       });
-    }, 100); //10 fps
+    }, 100);
 
     return () => clearInterval(interval);
   }, [isPlaying, metrics]);
@@ -46,152 +53,149 @@ export default function Dashboard() {
     4,
     "0"
   )}.png`;
+  const status = isPlaying ? "running" : "paused";
 
   return (
-    <div className="min-h-screen bg-black text-[#00d9ff] p-8">
-      <div className="mb-8">
-        <h1 className="text-4xl font-bold mb-2">SYNCHROTRON VISUALIZER</h1>
-        <p className="text-[#00d9ff]/60">Lysozyme Crystal</p>
-      </div>
+    <div className="dashboard-container">
+      <Header status={status} datasetName="Lysozyme Crystal - Good Dataset" />
 
-      <div className="grid grid-cols-12 gap-6">
-        <div className="col-span-8">
-          <div className="border border-[#00d9ff]/30 rounded-lg p-4 bg-black/50">
-            <h2 className="text-xl font-bold mb-4">Live Diffraction Pattern</h2>
-
-            <div className="relative bg-black border border-[#00d9ff]/20 rounded aspect-square">
+      <main className="dashboard-main">
+        <div className="canvas-grid">
+          <div className="canvas-panel canvas-large">
+            <div className="panel-header">
+              <h3>Live Diffraction Pattern</h3>
+              <span className="frame-info">
+                Frame {currentFrame} / {metrics?.total_frames || 360}
+              </span>
+            </div>
+            <div className="canvas-content">
               <img
                 src={frameUrl}
                 alt={`Frame ${currentFrame}`}
-                className="w-full h-full object-contain"
-                onError={(e) => {
-                  console.error("Image load error:", frameUrl);
-                  e.currentTarget.src =
-                    'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg"%3E%3C/svg%3E';
-                }}
+                className="diffraction-image"
               />
-
-              <div className="absolute top-4 right-4 bg-black/80 px-3 py-1 rounded border border-[#00d9ff]/50">
-                Frame {currentFrame} / {metrics?.total_frames || 360}
-              </div>
             </div>
-
-            <div className="mt-4 space-y-4">
+            <div className="canvas-controls">
               <input
                 type="range"
                 min="1"
                 max={metrics?.total_frames || 360}
                 value={currentFrame}
                 onChange={(e) => setCurrentFrame(Number(e.target.value))}
-                className="w-full accent-[#00d9ff]"
+                className="frame-slider"
               />
-
-              <div className="flex gap-4">
+              <div className="button-group">
                 <button
                   onClick={() => setIsPlaying(!isPlaying)}
-                  className="px-6 py-2 bg-[#00d9ff]/20 hover:bg-[#00d9ff]/30 border border-[#00d9ff] rounded font-bold transition-colors"
+                  className="btn-primary"
                 >
                   {isPlaying ? "⏸ PAUSE" : "▶ PLAY"}
                 </button>
-
                 <button
                   onClick={() => setCurrentFrame(1)}
-                  className="px-4 py-2 bg-[#00d9ff]/10 hover:bg-[#00d9ff]/20 border border-[#00d9ff]/50 rounded transition-colors"
+                  className="btn-secondary"
                 >
                   ⏮ RESET
                 </button>
               </div>
             </div>
           </div>
-        </div>
 
-        <div className="col-span-4 space-y-4">
-          <div className="border border-[#00d9ff]/30 rounded-lg p-4 bg-black/50">
-            <div className="text-sm text-[#00d9ff]/60 mb-1">STATUS</div>
-            <div className="text-2xl font-bold uppercase">
-              {metrics?.status || "Loading..."}
+          <div className="canvas-panel canvas-medium">
+            <div className="panel-header">
+              <h3>Resolution Rings</h3>
+            </div>
+            <div className="canvas-content canvas-placeholder">
+              <div className="placeholder-text">Resolution Ring Overlay</div>
+              <canvas id="resolution-canvas" width="400" height="400"></canvas>
             </div>
           </div>
 
-          {metrics && (
-            <>
-              <MetricCard
-                label="Resolution"
-                value={metrics.resolution.toFixed(2)}
-                unit="Å"
-                isGood={metrics.resolution < 1.8}
-              />
+          <div className="canvas-panel canvas-medium">
+            <div className="panel-header">
+              <h3>Quality Metrics</h3>
+            </div>
+            <div className="canvas-content metrics-grid">
+              {metrics && (
+                <>
+                  <div
+                    className={`metric-card ${
+                      metrics.resolution < 1.8 ? "good" : "warning"
+                    }`}
+                  >
+                    <div className="metric-label">Resolution</div>
+                    <div className="metric-value">
+                      {metrics.resolution.toFixed(2)} Å
+                    </div>
+                  </div>
+                  <div
+                    className={`metric-card ${
+                      metrics.i_over_sigma > 15 ? "good" : "warning"
+                    }`}
+                  >
+                    <div className="metric-label">I/σ(I)</div>
+                    <div className="metric-value">
+                      {metrics.i_over_sigma.toFixed(1)}
+                    </div>
+                  </div>
+                  <div
+                    className={`metric-card ${
+                      metrics.completeness > 98 ? "good" : "warning"
+                    }`}
+                  >
+                    <div className="metric-label">Completeness</div>
+                    <div className="metric-value">
+                      {metrics.completeness.toFixed(1)}%
+                    </div>
+                  </div>
+                  <div
+                    className={`metric-card ${
+                      metrics.r_merge < 0.12 ? "good" : "warning"
+                    }`}
+                  >
+                    <div className="metric-label">R-merge</div>
+                    <div className="metric-value">
+                      {metrics.r_merge.toFixed(3)}
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
 
-              <MetricCard
-                label="I/σ(I)"
-                value={metrics.i_over_sigma.toFixed(1)}
-                unit=""
-                isGood={metrics.i_over_sigma > 15}
-              />
+          <div className="canvas-panel canvas-large">
+            <div className="panel-header">
+              <h3>3D Reciprocal Lattice</h3>
+            </div>
+            <div className="canvas-content canvas-placeholder">
+              <div className="placeholder-text">Three.js 3D Viewer</div>
+              <canvas id="lattice-canvas"></canvas>
+            </div>
+          </div>
 
-              <MetricCard
-                label="Completeness"
-                value={metrics.completeness.toFixed(1)}
-                unit="%"
-                isGood={metrics.completeness > 98}
-              />
+          <div className="canvas-panel canvas-wide">
+            <div className="panel-header">
+              <h3>Resolution Shell Statistics</h3>
+            </div>
+            <div className="canvas-content canvas-placeholder">
+              <div className="placeholder-text">Recharts Plot</div>
+              <canvas id="shell-plot-canvas"></canvas>
+            </div>
+          </div>
 
-              <MetricCard
-                label="R-merge"
-                value={metrics.r_merge.toFixed(3)}
-                unit=""
-                isGood={metrics.r_merge < 0.12}
-              />
-
-              <MetricCard
-                label="CC½"
-                value={metrics.cc_half.toFixed(3)}
-                unit=""
-                isGood={metrics.cc_half > 0.95}
-              />
-
-              <MetricCard
-                label="Mosaicity"
-                value={metrics.mosaicity.toFixed(2)}
-                unit="°"
-                isGood={metrics.mosaicity < 0.5}
-              />
-
-              <div className="border border-[#00d9ff]/30 rounded-lg p-4 bg-black/50">
-                <div className="text-sm text-[#00d9ff]/60 mb-1">
-                  SPACE GROUP
-                </div>
-                <div className="text-xl font-mono">{metrics.space_group}</div>
-              </div>
-            </>
-          )}
+          <div className="canvas-panel canvas-medium">
+            <div className="panel-header">
+              <h3>Wilson Plot</h3>
+            </div>
+            <div className="canvas-content canvas-placeholder">
+              <div className="placeholder-text">Intensity vs Resolution²</div>
+              <canvas id="wilson-canvas"></canvas>
+            </div>
+          </div>
         </div>
-      </div>
-    </div>
-  );
-}
+      </main>
 
-function MetricCard({
-  label,
-  value,
-  unit,
-  isGood,
-}: {
-  label: string;
-  value: string;
-  unit: string;
-  isGood: boolean;
-}) {
-  const color = isGood ? "#00ff00" : "#ffaa00";
-
-  return (
-    <div className="border border-[#00d9ff]/30 rounded-lg p-4 bg-black/50">
-      <div className="text-sm text-[#00d9ff]/60 mb-1">
-        {label.toUpperCase()}
-      </div>
-      <div className="text-3xl font-bold" style={{ color }}>
-        {value} <span className="text-xl">{unit}</span>
-      </div>
+      <Footer />
     </div>
   );
 }
