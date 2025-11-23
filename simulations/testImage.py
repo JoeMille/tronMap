@@ -5,17 +5,14 @@ from pathlib import Path
 import json
 import time
 
-# ------------------------------------------------------------------
-# Configuration – change these if you want
-# ------------------------------------------------------------------
-OUTPUT_DIR = Path("../apps/web/public/data/lysozyme_good")   # where Next.js can read it
+OUTPUT_DIR = Path("../apps/web/public/data/lysozyme_good")   
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
-TOTAL_FRAMES = 360           # 180° at 0.5° per frame – perfect for demo
-IMAGE_SIZE = 2048            # 2048×2048 is standard PILATUS size
+TOTAL_FRAMES = 360           
+IMAGE_SIZE = 2048            
 CENTER_X, CENTER_Y = IMAGE_SIZE // 2, IMAGE_SIZE // 2
 
-# Realistic lysozyme target values (Diamond I03/I04)
+# lysozyme target values 
 GOOD_METRICS = {
     "resolution": 1.54,
     "completeness": 99.8,
@@ -29,55 +26,47 @@ GOOD_METRICS = {
     "space_group": "P 4₃ 2₁ 2"
 }
 
-# ------------------------------------------------------------------
-# Helper: generate one fake diffraction image
-# ------------------------------------------------------------------
+
 def generate_frame(frame_idx: int) -> np.ndarray:
     img = np.random.normal(30, 12, (IMAGE_SIZE, IMAGE_SIZE)).astype(np.uint16)
 
-    # ---- 5000–8000 Bragg spots (very realistic number) ----
+    # ---- 5000–8000 Bragg spots ----
     num_spots = np.random.randint(5000, 8000)
     for _ in range(num_spots):
-        # distance from centre = higher resolution → smaller radius
-        radius = np.random.uniform(30, 950)                     # pixels
+        radius = np.random.uniform(30, 950)                     
         angle = np.random.uniform(0, 2*np.pi)
 
-        # rotation of the entire pattern as the crystal turns
-        rotation = np.deg2rad(frame_idx * 0.5)   # 0.5° per frame
+        rotation = np.deg2rad(frame_idx * 0.5)  
         x = CENTER_X + radius * np.cos(angle + rotation)
         y = CENTER_Y + radius * np.sin(angle + rotation)
 
         x, y = int(x), int(y)
         if 0 <= x < IMAGE_SIZE and 0 <= y < IMAGE_SIZE:
-            # make a small bright spot (real spots are ~5×5 pixels)
-            intensity = np.random.lognormal(9.5, 0.9)   # bright but varied
+            intensity = np.random.lognormal(9.5, 0.9)   
             sz = 5
             yy, xx = np.ogrid[-sz:sz+1, -sz:sz+1]
             spot = np.exp(-(xx**2 + yy**2)/(2*3**2)) * intensity
             img[y-sz:y+sz+1, x-sz:x+sz+1] += spot.astype(np.uint16)
 
-    # ---- Beam-stop (black circle in the middle) ----
     rr, cc = np.ogrid[:IMAGE_SIZE, :IMAGE_SIZE]
     beamstop = (rr - CENTER_Y)**2 + (cc - CENTER_X)**2 <= 40**2
     img[beamstop] = 0
 
-    # ---- Very faint back-stop shadow at bottom (optional but looks real) ----
     img[-100:, :] //= 4
 
     img = np.clip(img, 0, 65535).astype(np.uint16)
     return img
 
 # ------------------------------------------------------------------
-# Main loop – generate all frames + live metrics
+# Main loop 
 # ------------------------------------------------------------------
-print(f"Generating {TOTAL_FRAMES} fake diffraction frames → {OUTPUT_DIR}")
+
+print(f"Generating {TOTAL_FRAMES} frames → {OUTPUT_DIR}")
 
 for frame in range(1, TOTAL_FRAMES + 1):
-    # 1. generate and save image
     img = generate_frame(frame)
     iio.imwrite(OUTPUT_DIR / f"frame_{frame:04d}.png", img)
 
-    # 2. update live metrics (gets better as more frames are added)
     progress = frame / TOTAL_FRAMES
 
     metrics = {
@@ -105,6 +94,6 @@ for frame in range(1, TOTAL_FRAMES + 1):
     if frame % 50 == 0 or frame == TOTAL_FRAMES:
         print(f"   → frame {frame}/{TOTAL_FRAMES}  |  resolution {metrics['resolution']:.2f} Å  |  I/σ {metrics['i_over_sigma']:.1f}")
 
-print("Done! Your fake (but totally believable) lysozyme dataset is ready.")
+print("sim image gen complete!")
 print(f"   Images → {OUTPUT_DIR}/frame_XXXX.png")
 print(f"   Live metrics → {OUTPUT_DIR}/metrics.json")
