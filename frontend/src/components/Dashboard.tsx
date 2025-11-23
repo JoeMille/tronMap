@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Header from "./Header";
 import Footer from "./Footer";
 import DiffractionViewer from "./DiffractionViewer";
@@ -41,28 +41,41 @@ export default function Dashboard() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [metricsData, setMetricsData] = useState<MetricsData | null>(null);
   const datasetPath = "/static/data/lysozyme_good";
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     fetch(`${datasetPath}/metrics.json`)
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+      })
       .then((data) => setMetricsData(data))
       .catch((err) => console.error("Failed to load metrics:", err));
   }, []);
 
   useEffect(() => {
-    if (!isPlaying || !metricsData) return;
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
 
-    const interval = setInterval(() => {
-      setCurrentFrame((prev) => {
-        if (prev >= metricsData.total_frames) {
-          setIsPlaying(false);
-          return prev;
-        }
-        return prev + 1;
-      });
-    }, 300);
+    if (isPlaying && metricsData) {
+      intervalRef.current = setInterval(() => {
+        setCurrentFrame((prev) => {
+          if (prev >= metricsData.total_frames) {
+            setIsPlaying(false);
+            return prev;
+          }
+          return prev + 1;
+        });
+      }, 150); //ms playback!
+    }
 
-    return () => clearInterval(interval);
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+    };
   }, [isPlaying, metricsData]);
 
   const frameUrl = `${datasetPath}/frame_${String(currentFrame).padStart(
@@ -70,7 +83,6 @@ export default function Dashboard() {
     "0"
   )}.png`;
   const status = isPlaying ? "running" : "paused";
-
   const currentFrameMetrics = metricsData?.frames[currentFrame - 1];
 
   return (
@@ -127,7 +139,7 @@ export default function Dashboard() {
               <h3>Quality Metrics</h3>
             </div>
             <div className="canvas-content metrics-grid">
-              {currentFrameMetrics && (
+              {currentFrameMetrics && metricsData && (
                 <>
                   <div
                     className={`metric-card ${

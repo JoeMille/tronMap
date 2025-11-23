@@ -1,5 +1,4 @@
 import { useEffect, useState, useRef } from "react";
-import ResolutionRings from "./ResolutionRings";
 import "./DiffractionViewer.css";
 
 interface ResolutionShell {
@@ -28,24 +27,18 @@ export default function DiffractionViewer({
   resolutionShells,
   overallResolution,
 }: DiffractionViewerProps) {
-  const [zoom, setZoom] = useState(1);
+  const [zoom, setZoom] = useState(1.5);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
-  const [showRings, setShowRings] = useState(true);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const imageRef = useRef<HTMLImageElement>(null);
 
-  useEffect(() => {
-    setZoom(1);
-    setPan({ x: 0, y: 0 });
-  }, [imageUrl]);
-
   const handleWheel = (e: React.WheelEvent) => {
     e.preventDefault();
-    const delta = e.deltaY * -0.0003;
-    const newZoom = Math.min(5, Math.max(0.5, zoom + delta));
+    const delta = e.deltaY * -0.001;
+    const newZoom = Math.min(8, Math.max(0.5, zoom + delta));
     setZoom(newZoom);
   };
 
@@ -70,7 +63,7 @@ export default function DiffractionViewer({
   };
 
   const handleReset = () => {
-    setZoom(1);
+    setZoom(1.5);
     setPan({ x: 0, y: 0 });
   };
 
@@ -113,17 +106,9 @@ export default function DiffractionViewer({
           style={{ width: "1px", background: "#333", margin: "0 0.5rem" }}
         ></div>
 
-        <button onClick={() => setZoom(Math.min(5, zoom + 0.2))}>🔍 +</button>
-        <button onClick={() => setZoom(Math.max(0.5, zoom - 0.2))}>🔍 −</button>
+        <button onClick={() => setZoom(Math.min(8, zoom + 0.5))}>🔍 +</button>
+        <button onClick={() => setZoom(Math.max(0.5, zoom - 0.5))}>🔍 −</button>
         <button onClick={handleReset}>↺ Reset</button>
-
-        <div
-          style={{ width: "1px", background: "#333", margin: "0 0.5rem" }}
-        ></div>
-
-        <button onClick={() => setShowRings(!showRings)}>
-          {showRings ? "🔴 Hide Rings" : "⭕ Show Rings"}
-        </button>
 
         <span className="zoom-indicator">{Math.round(zoom * 100)}%</span>
       </div>
@@ -145,17 +130,6 @@ export default function DiffractionViewer({
           className="diffraction-image-zoomable"
           draggable={false}
         />
-
-        {showRings && (
-          <ResolutionRings
-            imageSize={2048}
-            zoom={zoom}
-            pan={pan}
-            isPlaying={isPlaying}
-            resolutionShells={resolutionShells}
-            overallResolution={overallResolution}
-          />
-        )}
 
         <div className="frame-overlay">
           Frame {frameNumber} / {totalFrames}

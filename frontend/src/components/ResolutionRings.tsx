@@ -17,8 +17,6 @@ interface ResolutionRingsProps {
   overallResolution?: number;
 }
 
-const ICE_RINGS = [3.9, 3.7, 3.4];
-
 export default function ResolutionRings({
   imageSize,
   zoom,
@@ -37,6 +35,9 @@ export default function ResolutionRings({
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
+    canvas.width = imageSize;
+    canvas.height = imageSize;
+
     let startTime = Date.now();
 
     const draw = (timestamp?: number) => {
@@ -46,123 +47,54 @@ export default function ResolutionRings({
 
       ctx.save();
       ctx.translate(canvas.width / 2, canvas.height / 2);
-      ctx.translate(pan.x, pan.y);
       ctx.scale(zoom, zoom);
+      ctx.translate(pan.x / zoom, pan.y / zoom);
 
       const centerX = 0;
       const centerY = 0;
-      const K = 850;
 
-      resolutionShells.forEach((shell, index) => {
-        const radius = K / shell.resolution;
+      resolutionShells.forEach((shell) => {
+        const radius = getRadiusForResolution(shell.resolution);
 
-        const isReachable = shell.resolution >= overallResolution;
         const isGoodData = shell.i_over_sigma >= 2;
-        const isExcellent = shell.i_over_sigma >= 10 && shell.completeness > 95;
+        const isExcellent = shell.i_over_sigma >= 10;
 
         let color: string;
         let alpha: number;
-        let lineWidth: number;
-        let shouldFill = false;
 
-        if (!isReachable) {
-          color = "#444";
-          alpha = 0.15;
-          lineWidth = 1 / zoom;
-        } else if (isExcellent) {
-          const hue = 120 + index * 10;
-          color = `hsl(${hue}, 100%, 50%)`;
-          const pulse = isPlaying
-            ? Math.sin(elapsed / 300 + index * 0.5) * 0.3 + 0.7
-            : 0.9;
+        if (isExcellent) {
+          color = "#00ff88";
+          const pulse = isPlaying ? Math.sin(elapsed / 400) * 0.2 + 0.8 : 1;
           alpha = pulse;
-          lineWidth = 4 / zoom;
-          shouldFill = true;
         } else if (isGoodData) {
           color = "#00d9ff";
-          alpha = 0.7;
-          lineWidth = 2.5 / zoom;
-          shouldFill = true;
+          alpha = 0.9;
         } else {
           color = "#ff6b6b";
-          alpha = 0.3;
-          lineWidth = 1.5 / zoom;
+          alpha = 0.7;
         }
 
         ctx.beginPath();
         ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
         ctx.strokeStyle = color;
-        ctx.lineWidth = lineWidth;
+        ctx.lineWidth = 3;
         ctx.globalAlpha = alpha;
         ctx.stroke();
 
-        if (shouldFill) {
-          ctx.fillStyle = color;
-          ctx.globalAlpha = isExcellent ? alpha * 0.2 : 0.08;
-          ctx.fill();
-        }
-
-        ctx.font = `bold ${16 / zoom}px "Courier New", monospace`;
+        ctx.font = `bold 18px Arial`;
         ctx.fillStyle = color;
-        ctx.globalAlpha = isReachable ? 1 : 0.3;
+        ctx.globalAlpha = 1;
         ctx.textAlign = "center";
+        ctx.fillText(`${shell.resolution}Å`, centerX, centerY - radius - 10);
+
+        ctx.font = `14px Arial`;
+        ctx.fillStyle = "#ffffff";
         ctx.fillText(
-          `${shell.resolution}Å`,
+          `I/σ: ${shell.i_over_sigma.toFixed(1)}`,
           centerX,
-          centerY - radius - 15 / zoom
+          centerY - radius - 30
         );
-
-        if (isReachable) {
-          ctx.font = `${10 / zoom}px "Courier New", monospace`;
-          ctx.fillStyle = isGoodData ? "#00ff00" : "#ff6b6b";
-          ctx.globalAlpha = 0.9;
-          const status = isExcellent
-            ? "★ EXCELLENT"
-            : isGoodData
-            ? "✓ GOOD"
-            : "✗ WEAK";
-          ctx.fillText(status, centerX, centerY - radius - 30 / zoom);
-
-          ctx.font = `${9 / zoom}px "Courier New", monospace`;
-          ctx.fillStyle = "#fff";
-          ctx.globalAlpha = 0.7;
-          ctx.fillText(
-            `I/σ: ${shell.i_over_sigma.toFixed(1)}`,
-            centerX,
-            centerY - radius - 45 / zoom
-          );
-        }
       });
-
-      ICE_RINGS.forEach((iceRes) => {
-        const radius = K / iceRes;
-        const pulse = isPlaying ? Math.sin(elapsed / 200) * 0.3 + 0.5 : 0.5;
-
-        ctx.beginPath();
-        ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
-        ctx.strokeStyle = "#ff0000";
-        ctx.lineWidth = 2 / zoom;
-        ctx.globalAlpha = pulse * 0.6;
-        ctx.setLineDash([10 / zoom, 5 / zoom]);
-        ctx.stroke();
-        ctx.setLineDash([]);
-
-        ctx.font = `${10 / zoom}px "Courier New", monospace`;
-        ctx.fillStyle = "#ff0000";
-        ctx.globalAlpha = 0.8;
-        ctx.textAlign = "center";
-        ctx.fillText("❄️ ICE", centerX + radius / 1.4, centerY - radius / 1.4);
-      });
-
-      ctx.strokeStyle = "#fff";
-      ctx.lineWidth = 2 / zoom;
-      ctx.globalAlpha = 0.6;
-      ctx.beginPath();
-      ctx.moveTo(centerX - 30, centerY);
-      ctx.lineTo(centerX + 30, centerY);
-      ctx.moveTo(centerX, centerY - 30);
-      ctx.lineTo(centerX, centerY + 30);
-      ctx.stroke();
 
       ctx.restore();
 
@@ -184,12 +116,17 @@ export default function ResolutionRings({
     };
   }, [imageSize, zoom, pan, isPlaying, resolutionShells, overallResolution]);
 
-  return (
-    <canvas
-      ref={canvasRef}
-      className="resolution-rings-canvas"
-      width={imageSize}
-      height={imageSize}
-    />
-  );
+  return <canvas ref={canvasRef} className="resolution-rings-canvas" />;
+}
+
+function getRadiusForResolution(angstrom: number): number {
+  const resolutionMap: { [key: number]: number } = {
+    8.0: 120,
+    4.0: 220,
+    2.5: 360,
+    2.0: 520,
+    1.7: 680,
+    1.5: 820,
+  };
+  return resolutionMap[angstrom] || 850 / angstrom;
 }
