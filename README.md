@@ -1,34 +1,4 @@
-Phase 1 – Django
-
-Create project folder synchroviz/
-Inside it, create backend/ folder
-cd backend && python -m venv venv && source venv/bin/activate
-pip install django djangorestframework django-cors-headers
-django-admin startproject core .
-python manage.py startapp datasets
-Add 'corsheaders', 'rest_framework', 'datasets' to INSTALLED_APPS
-Add CORS_ALLOW_ALL_ORIGINS = True (dev only)
-In settings.py → add:PythonSTATIC_URL = '/static/'
-STATICFILES_DIRS = [BASE_DIR / "static"]
-STATIC_ROOT = BASE_DIR / "staticfiles"
-Create folder structure: backend/static/data/lysozyme_good/ and lysozyme_bad/
-Run your Python simulator → copy all frame_XXXX.png + metrics.json into both folders
-python manage.py runserver → verify images work at:
-http://127.0.0.1:8000/static/data/lysozyme_good/frame_0123.png
-http://127.0.0.1:8000/static/data/lysozyme_good/metrics.json
-
-(Optional) Add simple API view that lists available datasets
-
-Phase 2 – React + Vite + Three.js Frontend
-
-In root folder → npm create vite@latest frontend -- --template react-ts
-cd frontend
-npm install three @react-three/fiber @react-three/drei tailwindcss postcss autoprefixer recharts lucide-react
-npx tailwindcss init -p
-Set up dark sci-fi Tailwind theme (black background, cyan-400/500 glows, glassmorphism)
-Replace proxy in vite.config.ts → Django dev server:TypeScriptserver: { proxy: { '/static': 'http://127.0.0.1:8000' } }
-
-Phase 3 – Core Visual Components (in order of wow-factor)
+Core Visual Components (in order of wow-factor)
 
 Dataset Selector (dropdown: “Good lysozyme”, “Bad – ice rings”, “Bad – radiation damage”)
 Live Diffraction Image Viewer

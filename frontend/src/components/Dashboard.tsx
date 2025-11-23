@@ -138,9 +138,6 @@ export default function Dashboard() {
           </div>
 
           <div className="canvas-panel canvas-analytics">
-            <div className="panel-header">
-              <h3>Real-Time Analytics</h3>
-            </div>
             <div className="analytics-container">
               <div className="graphs-section">
                 <MetricsGraph
