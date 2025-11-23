@@ -111,7 +111,7 @@ export default function MetricsGraph({
       ctx.shadowColor = "#ff3333";
       ctx.shadowBlur = 15 * pulseIntensity;
       ctx.strokeStyle = `rgba(255, 51, 51, ${0.7 + pulseIntensity * 0.3})`;
-      ctx.lineWidth = 2;
+      ctx.lineWidth = 1;
       ctx.setLineDash([8, 4]);
       ctx.beginPath();
       ctx.moveTo(padding.left, thresholdY);
@@ -175,7 +175,7 @@ export default function MetricsGraph({
     ctx.shadowColor = color;
     ctx.shadowBlur = 20;
     ctx.strokeStyle = color;
-    ctx.lineWidth = 5;
+    ctx.lineWidth = 2.5;
     ctx.beginPath();
 
     data.forEach((point, index) => {

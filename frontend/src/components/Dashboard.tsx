@@ -3,6 +3,7 @@ import Header from "./Header";
 import Footer from "./Footer";
 import DiffractionViewer from "./DiffractionViewer";
 import MetricsGraph from "./MetricsGraph";
+import CrystalLatticeViewer from "./CrystalLatticeViewer";
 import "./Header.css";
 import "./Footer.css";
 import "./Dashboard.css";
@@ -167,6 +168,19 @@ export default function Dashboard() {
                   overallStats={metricsData?.overall_statistics}
                 />
               </div>
+            </div>
+          </div>
+
+          <div className="canvas-panel canvas-panel-lattice">
+            <div className="panel-header">
+              <h3>3D Reciprocal Space Lattice</h3>
+            </div>
+            <div className="canvas-content" style={{ padding: 0 }}>
+              <CrystalLatticeViewer
+                resolutionShells={currentFrameMetrics?.resolution_shells}
+                currentFrame={currentFrame}
+                isPlaying={isPlaying}
+              />
             </div>
           </div>
         </div>
