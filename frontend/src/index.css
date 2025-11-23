@@ -1,0 +1,21 @@
+@import "tailwindcss";
+
+@theme {
+  --color-cyber-blue: #00d9ff;
+  --color-cyber-cyan: #0ff;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: 0;
+}
+
+body {
+  margin: 0;
+  background: #000;
+  color: #00d9ff;
+  font-family: "Courier New", Courier, monospace;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
