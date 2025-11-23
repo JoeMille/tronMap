@@ -5,12 +5,14 @@ interface DiffractionViewerProps {
   imageUrl: string;
   frameNumber: number;
   totalFrames: number;
+  onFrameChange?: (frame: number) => void;
 }
 
 export default function DiffractionViewer({
   imageUrl,
   frameNumber,
   totalFrames,
+  onFrameChange,
 }: DiffractionViewerProps) {
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
@@ -27,7 +29,8 @@ export default function DiffractionViewer({
 
   const handleWheel = (e: React.WheelEvent) => {
     e.preventDefault();
-    const delta = e.deltaY * -0.001; // Fixed: was 'deltay'
+
+    const delta = e.deltaY * -0.0003;
     const newZoom = Math.min(5, Math.max(0.5, zoom + delta));
 
     setZoom(newZoom);
@@ -59,6 +62,18 @@ export default function DiffractionViewer({
     setPan({ x: 0, y: 0 });
   };
 
+  const handlePrevFrame = () => {
+    if (frameNumber > 1 && onFrameChange) {
+      onFrameChange(frameNumber - 1);
+    }
+  };
+
+  const handleNextFrame = () => {
+    if (frameNumber < totalFrames && onFrameChange) {
+      onFrameChange(frameNumber + 1);
+    }
+  };
+
   const imageStyle = {
     transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
     cursor: isDragging ? "grabbing" : "grab",
@@ -67,13 +82,28 @@ export default function DiffractionViewer({
   return (
     <div className="diffraction-viewer">
       <div className="viewer-controls">
-        <button onClick={() => setZoom(Math.min(5, zoom + 0.5))}>
-          🔍 Zoom In
+        <button
+          onClick={handlePrevFrame}
+          disabled={frameNumber <= 1}
+          style={{ opacity: frameNumber <= 1 ? 0.5 : 1 }}
+        >
+          ⏮ Prev
         </button>
-        <button onClick={() => setZoom(Math.max(0.5, zoom - 0.5))}>
-          🔍 Zoom Out
+        <button
+          onClick={handleNextFrame}
+          disabled={frameNumber >= totalFrames}
+          style={{ opacity: frameNumber >= totalFrames ? 0.5 : 1 }}
+        >
+          Next ⏭
         </button>
-        <button onClick={handleReset}>↺ Reset View</button>
+
+        <div
+          style={{ width: "1px", background: "#333", margin: "0 0.5rem" }}
+        ></div>
+
+        <button onClick={() => setZoom(Math.min(5, zoom + 0.2))}>🔍 +</button>
+        <button onClick={() => setZoom(Math.max(0.5, zoom - 0.2))}>🔍 −</button>
+        <button onClick={handleReset}>↺ Reset</button>
         <span className="zoom-indicator">{Math.round(zoom * 100)}%</span>
       </div>
 

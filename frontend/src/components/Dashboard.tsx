@@ -45,7 +45,7 @@ export default function Dashboard() {
         }
         return prev + 1;
       });
-    }, 100);
+    }, 300); // playback speed in ms
 
     return () => clearInterval(interval);
   }, [isPlaying, metrics]);
@@ -67,11 +67,14 @@ export default function Dashboard() {
               <h3>Live Diffraction Pattern</h3>
             </div>
 
-            <DiffractionViewer
-              imageUrl={frameUrl}
-              frameNumber={currentFrame}
-              totalFrames={metrics?.total_frames || 360}
-            />
+            <div className="canvas-content">
+              <DiffractionViewer
+                imageUrl={frameUrl}
+                frameNumber={currentFrame}
+                totalFrames={metrics?.total_frames || 360}
+                onFrameChange={setCurrentFrame}
+              />
+            </div>
 
             <div className="canvas-controls">
               <input
