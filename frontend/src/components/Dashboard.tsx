@@ -6,55 +6,72 @@ import "./Header.css";
 import "./Footer.css";
 import "./Dashboard.css";
 
-interface Metrics {
-  current_frame: number;
-  total_frames: number;
-  status: string;
+interface ResolutionShell {
   resolution: number;
-  completeness: number;
   i_over_sigma: number;
-  r_merge: number;
-  cc_half: number;
-  mosaicity: number;
-  space_group: string;
+  completeness: number;
+  n_reflections: number;
+}
+
+interface FrameMetrics {
+  frame: number;
+  resolution_shells: ResolutionShell[];
+  overall_i_over_sigma: number;
+  overall_completeness: number;
+}
+
+interface MetricsData {
+  dataset: string;
+  total_frames: number;
+  frames: FrameMetrics[];
+  overall_statistics: {
+    resolution: number;
+    space_group: string;
+    unit_cell: string;
+    completeness: number;
+    i_over_sigma: number;
+    r_merge: number;
+    cc_half: number;
+    mosaicity: number;
+  };
 }
 
 export default function Dashboard() {
   const [currentFrame, setCurrentFrame] = useState(1);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [metrics, setMetrics] = useState<Metrics | null>(null);
+  const [metricsData, setMetricsData] = useState<MetricsData | null>(null);
   const datasetPath = "/static/data/lysozyme_good";
 
-  // Load metrics
   useEffect(() => {
     fetch(`${datasetPath}/metrics.json`)
       .then((res) => res.json())
-      .then((data) => setMetrics(data))
+      .then((data) => setMetricsData(data))
       .catch((err) => console.error("Failed to load metrics:", err));
   }, []);
 
-  // Auto-play
   useEffect(() => {
-    if (!isPlaying || !metrics) return;
+    if (!isPlaying || !metricsData) return;
 
     const interval = setInterval(() => {
       setCurrentFrame((prev) => {
-        if (prev >= metrics.total_frames) {
+        if (prev >= metricsData.total_frames) {
           setIsPlaying(false);
           return prev;
         }
         return prev + 1;
       });
-    }, 300); // playback speed in ms
+    }, 300);
 
     return () => clearInterval(interval);
-  }, [isPlaying, metrics]);
+  }, [isPlaying, metricsData]);
 
   const frameUrl = `${datasetPath}/frame_${String(currentFrame).padStart(
     4,
     "0"
   )}.png`;
   const status = isPlaying ? "running" : "paused";
+
+  const currentFrameMetrics = metricsData?.frames[currentFrame - 1];
 
   return (
     <div className="dashboard-container">
@@ -71,8 +88,11 @@ export default function Dashboard() {
               <DiffractionViewer
                 imageUrl={frameUrl}
                 frameNumber={currentFrame}
-                totalFrames={metrics?.total_frames || 360}
+                totalFrames={metricsData?.total_frames || 360}
                 onFrameChange={setCurrentFrame}
+                isPlaying={isPlaying}
+                resolutionShells={currentFrameMetrics?.resolution_shells}
+                overallResolution={metricsData?.overall_statistics.resolution}
               />
             </div>
 
@@ -80,7 +100,7 @@ export default function Dashboard() {
               <input
                 type="range"
                 min="1"
-                max={metrics?.total_frames || 360}
+                max={metricsData?.total_frames || 360}
                 value={currentFrame}
                 onChange={(e) => setCurrentFrame(Number(e.target.value))}
                 className="frame-slider"
@@ -104,89 +124,61 @@ export default function Dashboard() {
 
           <div className="canvas-panel canvas-medium">
             <div className="panel-header">
-              <h3>Resolution Rings</h3>
-            </div>
-            <div className="canvas-content canvas-placeholder">
-              <div className="placeholder-text">Resolution Ring Overlay</div>
-            </div>
-          </div>
-
-          <div className="canvas-panel canvas-medium">
-            <div className="panel-header">
               <h3>Quality Metrics</h3>
             </div>
             <div className="canvas-content metrics-grid">
-              {metrics && (
+              {currentFrameMetrics && (
                 <>
                   <div
                     className={`metric-card ${
-                      metrics.resolution < 1.8 ? "good" : "warning"
+                      metricsData.overall_statistics.resolution < 1.8
+                        ? "good"
+                        : "warning"
                     }`}
                   >
                     <div className="metric-label">Resolution</div>
                     <div className="metric-value">
-                      {metrics.resolution.toFixed(2)} Å
+                      {metricsData.overall_statistics.resolution.toFixed(2)} Å
                     </div>
                   </div>
                   <div
                     className={`metric-card ${
-                      metrics.i_over_sigma > 15 ? "good" : "warning"
+                      currentFrameMetrics.overall_i_over_sigma > 15
+                        ? "good"
+                        : "warning"
                     }`}
                   >
                     <div className="metric-label">I/σ(I)</div>
                     <div className="metric-value">
-                      {metrics.i_over_sigma.toFixed(1)}
+                      {currentFrameMetrics.overall_i_over_sigma.toFixed(1)}
                     </div>
                   </div>
                   <div
                     className={`metric-card ${
-                      metrics.completeness > 98 ? "good" : "warning"
+                      currentFrameMetrics.overall_completeness > 98
+                        ? "good"
+                        : "warning"
                     }`}
                   >
                     <div className="metric-label">Completeness</div>
                     <div className="metric-value">
-                      {metrics.completeness.toFixed(1)}%
+                      {currentFrameMetrics.overall_completeness.toFixed(1)}%
                     </div>
                   </div>
                   <div
                     className={`metric-card ${
-                      metrics.r_merge < 0.12 ? "good" : "warning"
+                      metricsData.overall_statistics.r_merge < 0.12
+                        ? "good"
+                        : "warning"
                     }`}
                   >
                     <div className="metric-label">R-merge</div>
                     <div className="metric-value">
-                      {metrics.r_merge.toFixed(3)}
+                      {metricsData.overall_statistics.r_merge.toFixed(3)}
                     </div>
                   </div>
                 </>
               )}
-            </div>
-          </div>
-
-          <div className="canvas-panel canvas-large">
-            <div className="panel-header">
-              <h3>3D Reciprocal Lattice</h3>
-            </div>
-            <div className="canvas-content canvas-placeholder">
-              <div className="placeholder-text">Three.js 3D Viewer</div>
-            </div>
-          </div>
-
-          <div className="canvas-panel canvas-wide">
-            <div className="panel-header">
-              <h3>Resolution Shell Statistics</h3>
-            </div>
-            <div className="canvas-content canvas-placeholder">
-              <div className="placeholder-text">Recharts Plot</div>
-            </div>
-          </div>
-
-          <div className="canvas-panel canvas-medium">
-            <div className="panel-header">
-              <h3>Wilson Plot</h3>
-            </div>
-            <div className="canvas-content canvas-placeholder">
-              <div className="placeholder-text">Intensity vs Resolution²</div>
             </div>
           </div>
         </div>

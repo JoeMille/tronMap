@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 import numpy as np
 import imageio.v3 as iio
 from pathlib import Path
@@ -8,92 +7,108 @@ import time
 OUTPUT_DIR = Path("../backend/static/data/lysozyme_good")
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
-TOTAL_FRAMES = 360           
-IMAGE_SIZE = 2048            
-CENTER_X, CENTER_Y = IMAGE_SIZE // 2, IMAGE_SIZE // 2
+TOTAL_FRAMES = 360
 
-# lysozyme target values 
-GOOD_METRICS = {
-    "resolution": 1.54,
-    "completeness": 99.8,
-    "i_over_sigma": 28.4,
-    "r_merge": 0.078,
-    "cc_half": 0.994,
-    "mosaicity": 0.28,
-    "unit_cell_a": 79.1,
-    "unit_cell_b": 79.1,
-    "unit_cell_c": 38.4,
-    "space_group": "P 4₃ 2₁ 2"
-}
-
-
-def generate_frame(frame_idx: int) -> np.ndarray:
-    img = np.random.normal(30, 12, (IMAGE_SIZE, IMAGE_SIZE)).astype(np.uint16)
-
-    # ---- 5000–8000 Bragg spots ----
-    num_spots = np.random.randint(5000, 8000)
-    for _ in range(num_spots):
-        radius = np.random.uniform(30, 950)                     
-        angle = np.random.uniform(0, 2*np.pi)
-
-        rotation = np.deg2rad(frame_idx * 0.5)  
-        x = CENTER_X + radius * np.cos(angle + rotation)
-        y = CENTER_Y + radius * np.sin(angle + rotation)
-
-        x, y = int(x), int(y)
-        if 0 <= x < IMAGE_SIZE and 0 <= y < IMAGE_SIZE:
-            intensity = np.random.lognormal(9.5, 0.9)   
-            sz = 5
-            yy, xx = np.ogrid[-sz:sz+1, -sz:sz+1]
-            spot = np.exp(-(xx**2 + yy**2)/(2*3**2)) * intensity
-            img[y-sz:y+sz+1, x-sz:x+sz+1] += spot.astype(np.uint16)
-
-    rr, cc = np.ogrid[:IMAGE_SIZE, :IMAGE_SIZE]
-    beamstop = (rr - CENTER_Y)**2 + (cc - CENTER_X)**2 <= 40**2
-    img[beamstop] = 0
-
-    img[-100:, :] //= 4
-
-    img = np.clip(img, 0, 65535).astype(np.uint16)
+def generate_frame(frame_num, total_frames):
+    width, height = 2048, 2048
+    img = np.zeros((height, width), dtype=np.uint8)
+    
+    center_x, center_y = width // 2, height // 2
+    angle = (frame_num / total_frames) * 2 * np.pi
+    
+    num_spots = 150
+    for i in range(num_spots):
+        spot_angle = (i / num_spots) * 2 * np.pi + angle
+        distance = np.random.uniform(200, 900)
+        
+        x = int(center_x + distance * np.cos(spot_angle))
+        y = int(center_y + distance * np.sin(spot_angle))
+        
+        if 0 <= x < width and 0 <= y < height:
+            intensity = int(np.random.uniform(150, 255))
+            spot_size = np.random.randint(3, 8)
+            
+            y_min = max(0, y - spot_size)
+            y_max = min(height, y + spot_size)
+            x_min = max(0, x - spot_size)
+            x_max = min(width, x + spot_size)
+            
+            img[y_min:y_max, x_min:x_max] = intensity
+    
+    noise = np.random.randint(0, 30, (height, width), dtype=np.uint8)
+    img = np.clip(img.astype(np.int16) + noise, 0, 255).astype(np.uint8)
+    
     return img
 
-# ------------------------------------------------------------------
-# Main loop 
-# ------------------------------------------------------------------
+def calculate_shell_statistics(frame_num, total_frames):
+    progress = frame_num / total_frames
+    
+    shells = []
+    for angstrom in [8.0, 4.0, 2.0, 1.6, 1.5]:
+        base_iosig = 25 - (angstrom * 2)
+        variation = np.sin(progress * np.pi) * 5
+        noise = np.random.uniform(-2, 2)
+        iosig = max(0.5, base_iosig + variation + noise)
+        
+        completeness = min(100, 85 + (progress * 15) + np.random.uniform(-5, 5))
+        
+        shells.append({
+            "resolution": angstrom,
+            "i_over_sigma": round(iosig, 2),
+            "completeness": round(completeness, 1),
+            "n_reflections": int(1000 / angstrom)
+        })
+    
+    return shells
 
-print(f"Generating {TOTAL_FRAMES} frames → {OUTPUT_DIR}")
+print("Generating diffraction frames...")
+start_time = time.time()
 
-for frame in range(1, TOTAL_FRAMES + 1):
-    img = generate_frame(frame)
-    iio.imwrite(OUTPUT_DIR / f"frame_{frame:04d}.png", img)
+frame_metrics = []
 
-    progress = frame / TOTAL_FRAMES
+for i in range(1, TOTAL_FRAMES + 1):
+    img = generate_frame(i, TOTAL_FRAMES)
+    
+    output_path = OUTPUT_DIR / f"frame_{i:04d}.png"
+    iio.imwrite(output_path, img)
+    
+    shells = calculate_shell_statistics(i, TOTAL_FRAMES)
+    
+    overall_iosig = np.mean([s["i_over_sigma"] for s in shells])
+    overall_completeness = np.mean([s["completeness"] for s in shells])
+    
+    frame_metrics.append({
+        "frame": i,
+        "resolution_shells": shells,
+        "overall_i_over_sigma": round(overall_iosig, 2),
+        "overall_completeness": round(overall_completeness, 1)
+    })
+    
+    if i % 50 == 0:
+        print(f"Generated frame {i}/{TOTAL_FRAMES}")
 
-    metrics = {
-        "current_frame": frame,
-        "total_frames": TOTAL_FRAMES,
-        "status": "collecting" if frame < 50 else "indexing" if frame < 120 else "integrating",
-        "resolution": max(1.54, 9.0 - 7.5 * progress),
-        "completeness": min(99.9, 100 * progress),
-        "i_over_sigma": min(45.0, 1.5 + 43.5 * progress),
-        "r_merge": max(0.078, 0.95 - 0.87 * progress),
-        "cc_half": min(0.999, 0.45 + 0.549 * progress),
-        "mosaicity": max(0.28, 1.9 - 1.62 * progress),
-        "unit_cell_a": 79.1, "unit_cell_b": 79.1, "unit_cell_c": 38.4,
-        "unit_cell_alpha": 90.0, "unit_cell_beta": 90.0, "unit_cell_gamma": 90.0,
-        "space_group": "Indexing..." if frame < 120 else GOOD_METRICS["space_group"]
+metrics_data = {
+    "dataset": "lysozyme_good",
+    "total_frames": TOTAL_FRAMES,
+    "frames": frame_metrics,
+    "overall_statistics": {
+        "resolution": 1.5,
+        "space_group": "P43212",
+        "unit_cell": "a=78.9 b=78.9 c=38.8",
+        "completeness": 99.2,
+        "i_over_sigma": 18.5,
+        "r_merge": 0.082,
+        "cc_half": 0.998,
+        "mosaicity": 0.12
     }
+}
 
-    if frame == TOTAL_FRAMES:
-        metrics["status"] = "success"
-        metrics.update(GOOD_METRICS)
+metrics_path = OUTPUT_DIR / "metrics.json"
+with open(metrics_path, "w") as f:
+    json.dump(metrics_data, f, indent=2)
 
-    with open(OUTPUT_DIR / "metrics.json", "w") as f:
-        json.dump(metrics, f, indent=2)
-
-    if frame % 50 == 0 or frame == TOTAL_FRAMES:
-        print(f"   → frame {frame}/{TOTAL_FRAMES}  |  resolution {metrics['resolution']:.2f} Å  |  I/σ {metrics['i_over_sigma']:.1f}")
-
-print("sim image gen complete!")
-print(f"   Images → {OUTPUT_DIR}/frame_XXXX.png")
-print(f"   Live metrics → {OUTPUT_DIR}/metrics.json")
+elapsed_time = time.time() - start_time
+print(f"\nGeneration complete!")
+print(f"Total time: {elapsed_time:.2f} seconds")
+print(f"Frames: {TOTAL_FRAMES}")
+print(f"Output: {OUTPUT_DIR}")
