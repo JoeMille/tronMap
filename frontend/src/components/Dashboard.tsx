@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import Header from "./Header";
 import Footer from "./Footer";
+import DiffractionViewer from "./DiffractionViewer";
 import "./Header.css";
 import "./Footer.css";
 import "./Dashboard.css";
@@ -24,7 +25,7 @@ export default function Dashboard() {
   const [metrics, setMetrics] = useState<Metrics | null>(null);
   const datasetPath = "/static/data/lysozyme_good";
 
-  // load metrics
+  // Load metrics
   useEffect(() => {
     fetch(`${datasetPath}/metrics.json`)
       .then((res) => res.json())
@@ -32,7 +33,7 @@ export default function Dashboard() {
       .catch((err) => console.error("Failed to load metrics:", err));
   }, []);
 
-  //auto-play
+  // Auto-play
   useEffect(() => {
     if (!isPlaying || !metrics) return;
 
@@ -64,17 +65,14 @@ export default function Dashboard() {
           <div className="canvas-panel canvas-large">
             <div className="panel-header">
               <h3>Live Diffraction Pattern</h3>
-              <span className="frame-info">
-                Frame {currentFrame} / {metrics?.total_frames || 360}
-              </span>
             </div>
-            <div className="canvas-content">
-              <img
-                src={frameUrl}
-                alt={`Frame ${currentFrame}`}
-                className="diffraction-image"
-              />
-            </div>
+
+            <DiffractionViewer
+              imageUrl={frameUrl}
+              frameNumber={currentFrame}
+              totalFrames={metrics?.total_frames || 360}
+            />
+
             <div className="canvas-controls">
               <input
                 type="range"
@@ -107,7 +105,6 @@ export default function Dashboard() {
             </div>
             <div className="canvas-content canvas-placeholder">
               <div className="placeholder-text">Resolution Ring Overlay</div>
-              <canvas id="resolution-canvas" width="400" height="400"></canvas>
             </div>
           </div>
 
@@ -169,7 +166,6 @@ export default function Dashboard() {
             </div>
             <div className="canvas-content canvas-placeholder">
               <div className="placeholder-text">Three.js 3D Viewer</div>
-              <canvas id="lattice-canvas"></canvas>
             </div>
           </div>
 
@@ -179,7 +175,6 @@ export default function Dashboard() {
             </div>
             <div className="canvas-content canvas-placeholder">
               <div className="placeholder-text">Recharts Plot</div>
-              <canvas id="shell-plot-canvas"></canvas>
             </div>
           </div>
 
@@ -189,7 +184,6 @@ export default function Dashboard() {
             </div>
             <div className="canvas-content canvas-placeholder">
               <div className="placeholder-text">Intensity vs Resolution²</div>
-              <canvas id="wilson-canvas"></canvas>
             </div>
           </div>
         </div>

@@ -5,7 +5,7 @@ from pathlib import Path
 import json
 import time
 
-OUTPUT_DIR = Path("../apps/web/public/data/lysozyme_good")   
+OUTPUT_DIR = Path("../backend/static/data/lysozyme_good")
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
 TOTAL_FRAMES = 360           
