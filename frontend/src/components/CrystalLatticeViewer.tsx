@@ -20,11 +20,6 @@ export default function CrystalLatticeViewer({
   currentFrame,
   isPlaying,
 }: CrystalLatticeViewerProps) {
-  console.log(
-    "CrystalLatticeViewer mounted, resolutionShells:",
-    resolutionShells
-  );
-  console.log("currentFrame:", currentFrame);
   const containerRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<THREE.Scene | null>(null);
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
@@ -56,11 +51,11 @@ export default function CrystalLatticeViewer({
 
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x000000);
-    scene.fog = new THREE.FogExp2(0x000000, 0.01);
+    scene.fog = new THREE.FogExp2(0x000000, 0.008);
     sceneRef.current = scene;
 
     const camera = new THREE.PerspectiveCamera(50, width / height, 0.1, 1000);
-    camera.position.set(18, 14, 18);
+    camera.position.set(25, 18, 25);
     camera.lookAt(0, 0, 0);
     cameraRef.current = camera;
 
@@ -71,27 +66,24 @@ export default function CrystalLatticeViewer({
     });
     renderer.setSize(width, height);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     containerRef.current.appendChild(renderer.domElement);
     rendererRef.current = renderer;
 
-    const ambientLight = new THREE.AmbientLight(0x222244, 1.2);
+    const ambientLight = new THREE.AmbientLight(0x0a0a1a, 0.8);
     scene.add(ambientLight);
 
-    const mainLight = new THREE.PointLight(0x00d9ff, 4, 100);
-    mainLight.position.set(12, 12, 12);
-    mainLight.castShadow = true;
+    const mainLight = new THREE.PointLight(0x00d9ff, 3, 150);
+    mainLight.position.set(15, 15, 15);
     scene.add(mainLight);
     lightsRef.current.push(mainLight);
 
-    const accentLight1 = new THREE.PointLight(0xff00ff, 2.5, 80);
-    accentLight1.position.set(-12, 8, -12);
+    const accentLight1 = new THREE.PointLight(0xff00ff, 2, 100);
+    accentLight1.position.set(-15, 10, -15);
     scene.add(accentLight1);
     lightsRef.current.push(accentLight1);
 
-    const accentLight2 = new THREE.PointLight(0x00ff88, 2.5, 80);
-    accentLight2.position.set(12, -8, -12);
+    const accentLight2 = new THREE.PointLight(0x00ff88, 2, 100);
+    accentLight2.position.set(15, -10, -15);
     scene.add(accentLight2);
     lightsRef.current.push(accentLight2);
 
@@ -99,9 +91,9 @@ export default function CrystalLatticeViewer({
     latticeRef.current = latticeGroup;
     scene.add(latticeGroup);
 
-    const unitCellSize = 16;
-    const tubeRadius = 0.12;
-    const radialSegments = 8;
+    const unitCellSize = 14;
+    const tubeRadius = 0.05;
+    const radialSegments = 6;
 
     const edges = [
       [0, 0, 0, unitCellSize, 0, 0],
@@ -143,9 +135,9 @@ export default function CrystalLatticeViewer({
       const tubeMaterial = new THREE.MeshPhongMaterial({
         color: 0x00d9ff,
         emissive: 0x00d9ff,
-        emissiveIntensity: 0.5,
+        emissiveIntensity: 0.15,
         transparent: true,
-        opacity: 0.8,
+        opacity: 0.25,
         shininess: 100,
       });
 
@@ -155,13 +147,13 @@ export default function CrystalLatticeViewer({
       tube.quaternion.setFromUnitVectors(axis, direction.normalize());
       latticeGroup.add(tube);
 
-      const sphereGeometry = new THREE.SphereGeometry(0.2, 16, 16);
+      const sphereGeometry = new THREE.SphereGeometry(0.12, 12, 12);
       const sphereMaterial = new THREE.MeshPhongMaterial({
         color: 0x00ffff,
         emissive: 0x00ffff,
-        emissiveIntensity: 0.8,
+        emissiveIntensity: 0.2,
         transparent: true,
-        opacity: 0.9,
+        opacity: 0.3,
       });
 
       const startSphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
@@ -169,11 +161,11 @@ export default function CrystalLatticeViewer({
       latticeGroup.add(startSphere);
     });
 
-    const energyFieldGeometry = new THREE.IcosahedronGeometry(11, 2);
+    const energyFieldGeometry = new THREE.IcosahedronGeometry(12, 3);
     const energyFieldMaterial = new THREE.MeshPhongMaterial({
       color: 0x00d9ff,
       transparent: true,
-      opacity: 0.02,
+      opacity: 0.03,
       wireframe: false,
       side: THREE.DoubleSide,
       emissive: 0x00d9ff,
@@ -187,21 +179,21 @@ export default function CrystalLatticeViewer({
     scene.add(energyField);
     energyFieldRef.current = energyField;
 
-    const wireframeGeometry = new THREE.IcosahedronGeometry(11.3, 2);
+    const wireframeGeometry = new THREE.IcosahedronGeometry(12.5, 2);
     const wireframeMaterial = new THREE.MeshBasicMaterial({
       color: 0x00d9ff,
       wireframe: true,
       transparent: true,
-      opacity: 0.25,
+      opacity: 0.12,
     });
     const wireframe = new THREE.Mesh(wireframeGeometry, wireframeMaterial);
     scene.add(wireframe);
     wireframeRef.current = wireframe;
 
-    const gridHelper = new THREE.GridHelper(50, 50, 0x00d9ff, 0x003344);
+    const gridHelper = new THREE.GridHelper(60, 60, 0x00d9ff, 0x002244);
     gridHelper.material.transparent = true;
-    gridHelper.material.opacity = 0.12;
-    gridHelper.position.y = -10;
+    gridHelper.material.opacity = 0.06;
+    gridHelper.position.y = -12;
     scene.add(gridHelper);
 
     const handleResize = () => {
@@ -220,38 +212,42 @@ export default function CrystalLatticeViewer({
       const time = Date.now() * 0.001;
 
       if (latticeRef.current && isPlayingRef.current) {
-        latticeRef.current.rotation.y += 0.005;
-        latticeRef.current.rotation.x = Math.sin(time * 0.3) * 0.08;
+        latticeRef.current.rotation.y += 0.003;
+        latticeRef.current.rotation.x = Math.sin(time * 0.2) * 0.05;
       }
 
       if (energyFieldRef.current) {
-        energyFieldRef.current.rotation.x = time * 0.2;
-        energyFieldRef.current.rotation.y = time * 0.3;
-        const breathe = 1 + Math.sin(time * 1.5) * 0.05;
+        if (isPlayingRef.current) {
+          energyFieldRef.current.rotation.x = time * 0.15;
+          energyFieldRef.current.rotation.y = time * 0.25;
+        }
+        const breathe = 1 + Math.sin(time * 1.2) * 0.03;
         energyFieldRef.current.scale.set(breathe, breathe, breathe);
       }
 
-      if (wireframeRef.current) {
-        wireframeRef.current.rotation.x = time * -0.15;
-        wireframeRef.current.rotation.y = time * 0.25;
+      if (wireframeRef.current && isPlayingRef.current) {
+        wireframeRef.current.rotation.x = time * -0.1;
+        wireframeRef.current.rotation.y = time * 0.2;
       }
 
       reflectionPointsRef.current.forEach((points, index) => {
         if (points.material instanceof THREE.PointsMaterial) {
-          const pulse = Math.sin(time * 2 + index * 0.5) * 0.2 + 0.8;
+          const pulse = Math.sin(time * 1.5 + index * 0.3) * 0.2 + 0.8;
           const baseOpacity =
-            (points.material as any).userData?.baseOpacity || 0.8;
+            (points.material as any).userData?.baseOpacity || 0.75;
           points.material.opacity = baseOpacity * pulse;
         }
-        points.rotation.y = time * 0.1 * (index + 1);
-        points.rotation.x = Math.sin(time * 0.3 + index) * 0.1;
+        if (isPlayingRef.current) {
+          points.rotation.y = time * 0.08 * (index + 1);
+          points.rotation.x = Math.sin(time * 0.25 + index) * 0.08;
+        }
       });
 
-      if (cameraRef.current) {
-        const radius = 35;
-        cameraRef.current.position.x = Math.cos(time * 0.15) * radius;
-        cameraRef.current.position.z = Math.sin(time * 0.15) * radius;
-        cameraRef.current.position.y = 16 + Math.sin(time * 0.1) * 4;
+      if (cameraRef.current && isPlayingRef.current) {
+        const radius = 32;
+        cameraRef.current.position.x = Math.cos(time * 0.12) * radius;
+        cameraRef.current.position.z = Math.sin(time * 0.12) * radius;
+        cameraRef.current.position.y = 20 + Math.sin(time * 0.08) * 3;
         cameraRef.current.lookAt(0, 0, 0);
       }
 
@@ -288,34 +284,83 @@ export default function CrystalLatticeViewer({
     const intensityNormalized = Math.min(avgIntensity / 30, 1);
     const completenessNormalized = avgCompleteness / 100;
 
+    // Sleek color transition: Red -> Orange -> Yellow -> Cyan -> Blue
     if (
       energyFieldRef.current &&
       energyFieldRef.current.material instanceof THREE.MeshPhongMaterial
     ) {
-      const targetEmissive = 0.2 + intensityNormalized * 0.5;
-      energyFieldRef.current.material.emissiveIntensity = targetEmissive;
+      let color: THREE.Color;
+      let glowIntensity: number;
 
-      const targetOpacity = 0.05 + completenessNormalized * 0.12;
-      energyFieldRef.current.material.opacity = targetOpacity;
+      if (avgIntensity < 10) {
+        // Critical: Deep Red with strong glow
+        color = new THREE.Color(0xff0033);
+        glowIntensity = 0.25;
+      } else if (avgIntensity < 15) {
+        // Poor: Red to Orange
+        const t = (avgIntensity - 10) / 5;
+        color = new THREE.Color().lerpColors(
+          new THREE.Color(0xff0033),
+          new THREE.Color(0xff6600),
+          t
+        );
+        glowIntensity = 0.2 + t * 0.05;
+      } else if (avgIntensity < 20) {
+        // Fair: Orange to Yellow
+        const t = (avgIntensity - 15) / 5;
+        color = new THREE.Color().lerpColors(
+          new THREE.Color(0xff6600),
+          new THREE.Color(0xffcc00),
+          t
+        );
+        glowIntensity = 0.15 + t * 0.05;
+      } else if (avgIntensity < 25) {
+        // Good: Yellow to Cyan
+        const t = (avgIntensity - 20) / 5;
+        color = new THREE.Color().lerpColors(
+          new THREE.Color(0xffcc00),
+          new THREE.Color(0x00ffff),
+          t
+        );
+        glowIntensity = 0.12 + t * 0.03;
+      } else {
+        // Excellent: Cyan to Deep Blue
+        const t = Math.min((avgIntensity - 25) / 10, 1);
+        color = new THREE.Color().lerpColors(
+          new THREE.Color(0x00ffff),
+          new THREE.Color(0x0066ff),
+          t
+        );
+        glowIntensity = 0.1 + t * 0.05;
+      }
 
-      const hue = intensityNormalized * 0.5;
-      const color = new THREE.Color().setHSL(hue, 1, 0.5);
       energyFieldRef.current.material.color = color;
       energyFieldRef.current.material.emissive = color;
+      energyFieldRef.current.material.emissiveIntensity = glowIntensity;
+      energyFieldRef.current.material.opacity = 0.02 + glowIntensity * 0.15;
     }
 
     if (
       wireframeRef.current &&
       wireframeRef.current.material instanceof THREE.MeshBasicMaterial
     ) {
+      let wireColor: THREE.Color;
+      if (avgIntensity < 15) {
+        wireColor = new THREE.Color(0xff3366);
+      } else if (avgIntensity < 25) {
+        wireColor = new THREE.Color(0xffaa00);
+      } else {
+        wireColor = new THREE.Color(0x00ddff);
+      }
+      wireframeRef.current.material.color = wireColor;
       wireframeRef.current.material.opacity =
-        0.15 + completenessNormalized * 0.25;
+        0.08 + completenessNormalized * 0.12;
     }
 
     if (lightsRef.current.length > 0) {
-      lightsRef.current[0].intensity = 3 + intensityNormalized * 2.5;
-      lightsRef.current[1].intensity = 1.5 + intensityNormalized * 2;
-      lightsRef.current[2].intensity = 1.5 + completenessNormalized * 2;
+      lightsRef.current[0].intensity = 2.5 + intensityNormalized * 2;
+      lightsRef.current[1].intensity = 1.5 + intensityNormalized * 1.5;
+      lightsRef.current[2].intensity = 1.5 + completenessNormalized * 1.5;
     }
 
     if (latticeRef.current) {
@@ -325,11 +370,11 @@ export default function CrystalLatticeViewer({
           child.material instanceof THREE.MeshPhongMaterial
         ) {
           if (child.geometry instanceof THREE.CylinderGeometry) {
-            child.material.emissiveIntensity = 0.3 + intensityNormalized * 0.5;
-            child.material.opacity = 0.7 + completenessNormalized * 0.3;
+            child.material.emissiveIntensity = 0.15 + intensityNormalized * 0.2;
+            child.material.opacity = 0.2 + completenessNormalized * 0.15;
           } else if (child.geometry instanceof THREE.SphereGeometry) {
-            child.material.emissiveIntensity = 0.6 + intensityNormalized * 0.4;
-            const scale = 0.8 + intensityNormalized * 0.4;
+            child.material.emissiveIntensity = 0.2 + intensityNormalized * 0.25;
+            const scale = 0.5 + intensityNormalized * 0.3;
             child.scale.set(scale, scale, scale);
           }
         }
@@ -346,11 +391,11 @@ export default function CrystalLatticeViewer({
     reflectionPointsRef.current = [];
 
     resolutionShells.forEach((shell, shellIndex) => {
-      const numPoints = Math.min(Math.floor(shell.n_reflections / 8), 1000);
+      const numPoints = Math.min(Math.floor(shell.n_reflections / 3), 3000); // 3x more points
       const positions = new Float32Array(numPoints * 3);
       const colors = new Float32Array(numPoints * 3);
 
-      const shellRadius = 5 + shellIndex * 2.8;
+      const shellRadius = 6 + shellIndex * 2.5;
 
       for (let i = 0; i < numPoints; i++) {
         const theta = Math.random() * Math.PI * 2;
@@ -360,10 +405,33 @@ export default function CrystalLatticeViewer({
         positions[i * 3 + 1] = shellRadius * Math.sin(phi) * Math.sin(theta);
         positions[i * 3 + 2] = shellRadius * Math.cos(phi);
 
-        const intensity = Math.min(shell.i_over_sigma / 25, 1);
-        colors[i * 3] = intensity * 0.3;
-        colors[i * 3 + 1] = intensity * 0.95;
-        colors[i * 3 + 2] = 1;
+        // Sleek color gradient
+        const intensity = Math.min(shell.i_over_sigma / 35, 1);
+
+        if (intensity < 0.3) {
+          // Red zone
+          colors[i * 3] = 1;
+          colors[i * 3 + 1] = intensity * 1.5;
+          colors[i * 3 + 2] = intensity * 0.5;
+        } else if (intensity < 0.5) {
+          // Orange-Yellow transition
+          const t = (intensity - 0.3) / 0.2;
+          colors[i * 3] = 1;
+          colors[i * 3 + 1] = 0.45 + t * 0.55;
+          colors[i * 3 + 2] = t * 0.3;
+        } else if (intensity < 0.7) {
+          // Yellow-Cyan transition
+          const t = (intensity - 0.5) / 0.2;
+          colors[i * 3] = 1 - t * 0.8;
+          colors[i * 3 + 1] = 1;
+          colors[i * 3 + 2] = 0.3 + t * 0.7;
+        } else {
+          // Cyan-Blue (excellent)
+          const t = (intensity - 0.7) / 0.3;
+          colors[i * 3] = 0.2 - t * 0.2;
+          colors[i * 3 + 1] = 1 - t * 0.4;
+          colors[i * 3 + 2] = 1;
+        }
       }
 
       const geometry = new THREE.BufferGeometry();
@@ -374,33 +442,32 @@ export default function CrystalLatticeViewer({
       geometry.setAttribute("color", new THREE.BufferAttribute(colors, 3));
 
       const canvas = document.createElement("canvas");
-      canvas.width = 32;
-      canvas.height = 32;
+      canvas.width = 16;
+      canvas.height = 16;
       const ctx = canvas.getContext("2d");
       if (ctx) {
-        const gradient = ctx.createRadialGradient(16, 16, 0, 16, 16, 16);
-        gradient.addColorStop(0, "rgba(255,255,255,1)");
-        gradient.addColorStop(0.5, "rgba(255,255,255,0.5)");
-        gradient.addColorStop(1, "rgba(255,255,255,0)");
-        ctx.fillStyle = gradient;
-        ctx.fillRect(0, 0, 32, 32);
+        ctx.clearRect(0, 0, 16, 16);
+        ctx.fillStyle = "rgba(255,255,255,1)";
+        ctx.fillRect(7, 7, 2, 2);
       }
 
       const texture = new THREE.CanvasTexture(canvas);
+      texture.minFilter = THREE.NearestFilter;
+      texture.magFilter = THREE.NearestFilter;
 
       const material = new THREE.PointsMaterial({
-        size: 4.0,
+        size: 1.6 + (shell.i_over_sigma / 30) * 0.8,
         vertexColors: true,
         transparent: true,
         opacity: 1.0,
-        blending: THREE.AdditiveBlending,
+        blending: THREE.NormalBlending,
         depthWrite: false,
-        sizeAttenuation: false,
+        sizeAttenuation: true,
         map: texture,
       });
 
       (material as any).userData = {
-        baseOpacity: (shell.completeness / 100) * 0.9,
+        baseOpacity: 1.0,
         shellIndex: shellIndex,
       };
 
@@ -409,47 +476,110 @@ export default function CrystalLatticeViewer({
       reflectionPointsRef.current.push(points);
     });
 
-    const intensityChange = Math.abs(
-      avgIntensity - prevMetricsRef.current.avgIntensity
-    );
-    if (intensityChange > 2 && latticeRef.current) {
-      const shakeIntensity = Math.min(intensityChange / 10, 0.3);
-      latticeRef.current.rotation.z =
-        Math.sin(Date.now() * 0.05) * shakeIntensity;
-      setTimeout(() => {
-        if (latticeRef.current) latticeRef.current.rotation.z = 0;
-      }, 200);
-    }
-
     prevMetricsRef.current = { avgIntensity, avgCompleteness };
   }, [resolutionShells, currentFrame]);
+
+  const getQualityLabel = () => {
+    if (!resolutionShells || resolutionShells.length === 0) return "NO DATA";
+    const avg =
+      resolutionShells.reduce((s, sh) => s + sh.i_over_sigma, 0) /
+      resolutionShells.length;
+    if (avg < 10) return "CRITICAL";
+    if (avg < 15) return "POOR";
+    if (avg < 20) return "FAIR";
+    if (avg < 25) return "GOOD";
+    return "EXCELLENT";
+  };
+
+  const getQualityColor = () => {
+    if (!resolutionShells || resolutionShells.length === 0) return "#666";
+    const avg =
+      resolutionShells.reduce((s, sh) => s + sh.i_over_sigma, 0) /
+      resolutionShells.length;
+    if (avg < 10) return "#ff0033";
+    if (avg < 15) return "#ff6600";
+    if (avg < 20) return "#ffcc00";
+    if (avg < 25) return "#00ffff";
+    return "#0066ff";
+  };
 
   return (
     <div ref={containerRef} className="crystal-lattice-container">
       <div className="crystal-lattice-info">
-        <div className="crystal-lattice-title">RECIPROCAL SPACE VIEWER</div>
+        <div className="crystal-lattice-title">
+          <span
+            style={{ color: "#00d9ff", fontSize: "11px", letterSpacing: "2px" }}
+          >
+            ◆ RECIPROCAL SPACE ANALYSIS
+          </span>
+        </div>
         <div className="crystal-lattice-status">
-          Frame: {currentFrame} | {isPlaying ? "ACTIVE SCAN" : "STANDBY"}
+          <div
+            style={{
+              fontSize: "10px",
+              fontFamily: "monospace",
+              letterSpacing: "1px",
+              marginBottom: "6px",
+            }}
+          >
+            FRAME:{" "}
+            <span style={{ color: "#00d9ff" }}>
+              {String(currentFrame).padStart(3, "0")}
+            </span>{" "}
+            │ STATUS:{" "}
+            <span style={{ color: isPlaying ? "#00ff88" : "#ffaa00" }}>
+              {isPlaying ? "◉ SCANNING" : "◎ PAUSED"}
+            </span>
+          </div>
           {resolutionShells && (
             <>
-              <div style={{ marginTop: "4px", fontSize: "10px" }}>
-                Avg I/σ:{" "}
-                {(
-                  resolutionShells.reduce((s, sh) => s + sh.i_over_sigma, 0) /
-                  resolutionShells.length
-                ).toFixed(1)}{" "}
-                | Completeness:{" "}
-                {(
-                  resolutionShells.reduce((s, sh) => s + sh.completeness, 0) /
-                  resolutionShells.length
-                ).toFixed(1)}
-                %
+              <div
+                style={{
+                  fontSize: "11px",
+                  marginTop: "4px",
+                  padding: "4px 8px",
+                  background: "rgba(0,217,255,0.05)",
+                  borderLeft: `2px solid ${getQualityColor()}`,
+                  fontFamily: "monospace",
+                }}
+              >
+                <div style={{ marginBottom: "3px" }}>
+                  I/σ:{" "}
+                  <span
+                    style={{ color: getQualityColor(), fontWeight: "bold" }}
+                  >
+                    {(
+                      resolutionShells.reduce(
+                        (s, sh) => s + sh.i_over_sigma,
+                        0
+                      ) / resolutionShells.length
+                    ).toFixed(2)}
+                  </span>{" "}
+                  │ COMPL:{" "}
+                  {(
+                    resolutionShells.reduce((s, sh) => s + sh.completeness, 0) /
+                    resolutionShells.length
+                  ).toFixed(1)}
+                  %
+                </div>
+                <div style={{ fontSize: "9px", opacity: 0.8 }}>
+                  REFLECTIONS:{" "}
+                  {resolutionShells
+                    .reduce((s, sh) => s + sh.n_reflections, 0)
+                    .toLocaleString()}
+                </div>
               </div>
-              <div style={{ fontSize: "10px" }}>
-                Total Reflections:{" "}
-                {resolutionShells
-                  .reduce((s, sh) => s + sh.n_reflections, 0)
-                  .toLocaleString()}
+              <div
+                style={{
+                  marginTop: "6px",
+                  fontSize: "10px",
+                  fontWeight: "bold",
+                  color: getQualityColor(),
+                  letterSpacing: "2px",
+                  fontFamily: "monospace",
+                }}
+              >
+                ▸ {getQualityLabel()}
               </div>
             </>
           )}
