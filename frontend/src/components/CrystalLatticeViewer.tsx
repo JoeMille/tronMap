@@ -20,6 +20,11 @@ export default function CrystalLatticeViewer({
   currentFrame,
   isPlaying,
 }: CrystalLatticeViewerProps) {
+  console.log(
+    "CrystalLatticeViewer mounted, resolutionShells:",
+    resolutionShells
+  );
+  console.log("currentFrame:", currentFrame);
   const containerRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<THREE.Scene | null>(null);
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
@@ -168,11 +173,11 @@ export default function CrystalLatticeViewer({
     const energyFieldMaterial = new THREE.MeshPhongMaterial({
       color: 0x00d9ff,
       transparent: true,
-      opacity: 0.08,
+      opacity: 0.02,
       wireframe: false,
       side: THREE.DoubleSide,
       emissive: 0x00d9ff,
-      emissiveIntensity: 0.2,
+      emissiveIntensity: 0.1,
     });
 
     const energyField = new THREE.Mesh(
@@ -243,7 +248,7 @@ export default function CrystalLatticeViewer({
       });
 
       if (cameraRef.current) {
-        const radius = 22;
+        const radius = 35;
         cameraRef.current.position.x = Math.cos(time * 0.15) * radius;
         cameraRef.current.position.z = Math.sin(time * 0.15) * radius;
         cameraRef.current.position.y = 16 + Math.sin(time * 0.1) * 4;
@@ -384,13 +389,13 @@ export default function CrystalLatticeViewer({
       const texture = new THREE.CanvasTexture(canvas);
 
       const material = new THREE.PointsMaterial({
-        size: 0.6 + (shell.i_over_sigma / 30) * 0.8,
+        size: 4.0,
         vertexColors: true,
         transparent: true,
-        opacity: (shell.completeness / 100) * 0.9,
+        opacity: 1.0,
         blending: THREE.AdditiveBlending,
         depthWrite: false,
-        sizeAttenuation: true,
+        sizeAttenuation: false,
         map: texture,
       });
 
