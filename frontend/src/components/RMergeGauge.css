@@ -14,7 +14,7 @@
 .gauge-top-section {
   display: flex;
   gap: 30px;
-  margin-bottom: 20px;
+  margin-bottom: -20px;
   align-items: center;
   justify-content: center;
 }
@@ -92,14 +92,14 @@
 .supplementary-metrics {
   display: flex;
   gap: 16px;
-  margin-bottom: 16px;
+  margin-bottom: 0px;
 }
 
 .metric-card {
   flex: 1;
   background: rgba(0, 0, 0, 0.6);
   border: 1px solid rgba(0, 217, 255, 0.3);
-  padding: 14px;
+  padding: 12px;
   text-align: center;
 }
 
@@ -107,21 +107,21 @@
   font-size: 10px;
   color: rgba(0, 217, 255, 0.7);
   letter-spacing: 1.5px;
-  margin-bottom: 6px;
+  margin-bottom: 5px;
 }
 
 .metric-value {
   font-size: 24px;
   font-weight: bold;
   text-shadow: 0 0 9px currentColor;
-  margin-bottom: 5px;
+  margin-bottom: 4px;
 }
 
 .metric-status {
   font-size: 10px;
   font-weight: bold;
   letter-spacing: 1px;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 
 .metric-description {
@@ -129,29 +129,29 @@
   color: rgba(0, 217, 255, 0.5);
   line-height: 1.4;
   text-align: left;
-  margin-top: 8px;
-  padding-top: 8px;
+  margin-top: 6px;
+  padding-top: 6px;
   border-top: 1px solid rgba(0, 217, 255, 0.15);
 }
 
 .gauge-info {
   background: rgba(0, 217, 255, 0.05);
   border: 1px solid rgba(0, 217, 255, 0.2);
-  padding: 14px;
+  padding: 12px;
 }
 
 .info-header {
   color: #00d9ff;
   font-size: 10px;
   letter-spacing: 1.5px;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
   font-weight: bold;
 }
 
 .info-text {
   color: rgba(0, 217, 255, 0.9);
   font-size: 12px;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
   text-align: center;
   font-family: "Times New Roman", serif;
   font-style: italic;

@@ -205,9 +205,6 @@ export default function Dashboard() {
           </div>
 
           <div className="canvas-panel canvas-panel-gauge">
-            <div className="panel-header">
-              <h3>Quality Assessment</h3>
-            </div>
             <div className="canvas-content" style={{ padding: 0 }}>
               {metricsData?.overall_statistics && currentFrameMetrics && (
                 <RMergeGauge

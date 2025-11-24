@@ -101,24 +101,20 @@ export default function RMergeGauge({
     ctx.shadowBlur = 0;
 
     const needleLength = radius - 15;
+    const needleStartRadius = 40; // Start needle further from center
     const needleX = centerX + Math.cos(needleAngle) * needleLength;
     const needleY = centerY + Math.sin(needleAngle) * needleLength;
+    const needleStartX = centerX + Math.cos(needleAngle) * needleStartRadius;
+    const needleStartY = centerY + Math.sin(needleAngle) * needleStartRadius;
 
     ctx.strokeStyle = quality.color;
     ctx.lineWidth = 5;
     ctx.shadowBlur = 22;
     ctx.shadowColor = quality.color;
     ctx.beginPath();
-    ctx.moveTo(centerX, centerY);
+    ctx.moveTo(needleStartX, needleStartY);
     ctx.lineTo(needleX, needleY);
     ctx.stroke();
-
-    ctx.fillStyle = quality.color;
-    ctx.shadowBlur = 30;
-    ctx.beginPath();
-    ctx.arc(centerX, centerY, 10, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.shadowBlur = 0;
 
     const tickAngles = [0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3];
     tickAngles.forEach((value) => {
@@ -285,19 +281,6 @@ export default function RMergeGauge({
             Crystal disorder parameter. Lower values indicate better crystal
             quality. Ideal range: 0.1-0.5°.
           </div>
-        </div>
-      </div>
-
-      <div className="gauge-info">
-        <div className="info-header">▸ R-MERGE EXPLANATION</div>
-        <div className="info-text">
-          R<sub>merge</sub> = Σ|I<sub>i</sub> - &lt;I&gt;| / ΣI<sub>i</sub>
-        </div>
-        <div className="info-description">
-          Measures reproducibility of intensity measurements for
-          symmetry-related reflections. Lower values indicate more consistent,
-          reliable data. Critical threshold for structure determination: R
-          <sub>merge</sub> &lt; 0.15
         </div>
       </div>
     </div>
