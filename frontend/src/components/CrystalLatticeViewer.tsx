@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import "./CrystalLatticeViewer.css";
 
@@ -37,6 +37,13 @@ export default function CrystalLatticeViewer({
   }>({
     avgIntensity: 0,
     avgCompleteness: 0,
+  });
+
+  const [metrics, setMetrics] = useState({
+    avgIntensity: 0,
+    avgCompleteness: 0,
+    totalReflections: 0,
+    resolution: 0,
   });
 
   useEffect(() => {
@@ -280,11 +287,55 @@ export default function CrystalLatticeViewer({
     const avgCompleteness =
       resolutionShells.reduce((sum, s) => sum + s.completeness, 0) /
       resolutionShells.length;
+    const totalReflections = resolutionShells.reduce(
+      (sum, s) => sum + s.n_reflections,
+      0
+    );
+    const bestResolution = Math.min(
+      ...resolutionShells.map((s) => s.resolution)
+    );
+
+    setMetrics({
+      avgIntensity,
+      avgCompleteness,
+      totalReflections,
+      resolution: bestResolution,
+    });
 
     const intensityNormalized = Math.min(avgIntensity / 30, 1);
     const completenessNormalized = avgCompleteness / 100;
 
-    // Sleek color transition: Red -> Orange -> Yellow -> Cyan -> Blue
+    if (sceneRef.current) {
+      let bgColor: THREE.Color;
+      if (avgIntensity < 10) {
+        bgColor = new THREE.Color(0x0a0000);
+      } else if (avgIntensity < 15) {
+        const t = (avgIntensity - 10) / 5;
+        bgColor = new THREE.Color().lerpColors(
+          new THREE.Color(0x0a0000),
+          new THREE.Color(0x0a0500),
+          t
+        );
+      } else if (avgIntensity < 20) {
+        const t = (avgIntensity - 15) / 5;
+        bgColor = new THREE.Color().lerpColors(
+          new THREE.Color(0x0a0500),
+          new THREE.Color(0x050a00),
+          t
+        );
+      } else if (avgIntensity < 25) {
+        const t = (avgIntensity - 20) / 5;
+        bgColor = new THREE.Color().lerpColors(
+          new THREE.Color(0x050a00),
+          new THREE.Color(0x000a0a),
+          t
+        );
+      } else {
+        bgColor = new THREE.Color(0x00050a);
+      }
+      sceneRef.current.background = bgColor;
+    }
+
     if (
       energyFieldRef.current &&
       energyFieldRef.current.material instanceof THREE.MeshPhongMaterial
@@ -293,11 +344,9 @@ export default function CrystalLatticeViewer({
       let glowIntensity: number;
 
       if (avgIntensity < 10) {
-        // Critical: Deep Red with strong glow
         color = new THREE.Color(0xff0033);
         glowIntensity = 0.25;
       } else if (avgIntensity < 15) {
-        // Poor: Red to Orange
         const t = (avgIntensity - 10) / 5;
         color = new THREE.Color().lerpColors(
           new THREE.Color(0xff0033),
@@ -306,7 +355,6 @@ export default function CrystalLatticeViewer({
         );
         glowIntensity = 0.2 + t * 0.05;
       } else if (avgIntensity < 20) {
-        // Fair: Orange to Yellow
         const t = (avgIntensity - 15) / 5;
         color = new THREE.Color().lerpColors(
           new THREE.Color(0xff6600),
@@ -315,7 +363,6 @@ export default function CrystalLatticeViewer({
         );
         glowIntensity = 0.15 + t * 0.05;
       } else if (avgIntensity < 25) {
-        // Good: Yellow to Cyan
         const t = (avgIntensity - 20) / 5;
         color = new THREE.Color().lerpColors(
           new THREE.Color(0xffcc00),
@@ -324,7 +371,6 @@ export default function CrystalLatticeViewer({
         );
         glowIntensity = 0.12 + t * 0.03;
       } else {
-        // Excellent: Cyan to Deep Blue
         const t = Math.min((avgIntensity - 25) / 10, 1);
         color = new THREE.Color().lerpColors(
           new THREE.Color(0x00ffff),
@@ -391,7 +437,7 @@ export default function CrystalLatticeViewer({
     reflectionPointsRef.current = [];
 
     resolutionShells.forEach((shell, shellIndex) => {
-      const numPoints = Math.min(Math.floor(shell.n_reflections / 3), 3000); // 3x more points
+      const numPoints = Math.min(Math.floor(shell.n_reflections / 3), 3000);
       const positions = new Float32Array(numPoints * 3);
       const colors = new Float32Array(numPoints * 3);
 
@@ -405,28 +451,23 @@ export default function CrystalLatticeViewer({
         positions[i * 3 + 1] = shellRadius * Math.sin(phi) * Math.sin(theta);
         positions[i * 3 + 2] = shellRadius * Math.cos(phi);
 
-        // Sleek color gradient
         const intensity = Math.min(shell.i_over_sigma / 35, 1);
 
         if (intensity < 0.3) {
-          // Red zone
           colors[i * 3] = 1;
           colors[i * 3 + 1] = intensity * 1.5;
           colors[i * 3 + 2] = intensity * 0.5;
         } else if (intensity < 0.5) {
-          // Orange-Yellow transition
           const t = (intensity - 0.3) / 0.2;
           colors[i * 3] = 1;
           colors[i * 3 + 1] = 0.45 + t * 0.55;
           colors[i * 3 + 2] = t * 0.3;
         } else if (intensity < 0.7) {
-          // Yellow-Cyan transition
           const t = (intensity - 0.5) / 0.2;
           colors[i * 3] = 1 - t * 0.8;
           colors[i * 3 + 1] = 1;
           colors[i * 3 + 2] = 0.3 + t * 0.7;
         } else {
-          // Cyan-Blue (excellent)
           const t = (intensity - 0.7) / 0.3;
           colors[i * 3] = 0.2 - t * 0.2;
           colors[i * 3 + 1] = 1 - t * 0.4;
@@ -501,6 +542,39 @@ export default function CrystalLatticeViewer({
     if (avg < 20) return "#ffcc00";
     if (avg < 25) return "#00ffff";
     return "#0066ff";
+  };
+
+  const MeterBar = ({
+    label,
+    value,
+    maxValue,
+    color,
+  }: {
+    label: string;
+    value: number;
+    maxValue: number;
+    color: string;
+  }) => {
+    const percentage = Math.min((value / maxValue) * 100, 100);
+
+    return (
+      <div className="meter-bar">
+        <div className="meter-label">
+          {label}: {value.toFixed(1)}
+        </div>
+        <div className="meter-container">
+          <div
+            className="meter-fill"
+            style={{
+              width: `${percentage}%`,
+              background: `linear-gradient(90deg, ${color}00, ${color})`,
+              boxShadow: `0 0 8px ${color}`,
+            }}
+          />
+          <div className="meter-grid" />
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -584,6 +658,28 @@ export default function CrystalLatticeViewer({
             </>
           )}
         </div>
+      </div>
+
+      <div className="metrics-panel">
+        <div className="metrics-header">▸ METRICS</div>
+        <MeterBar
+          label="I/σ"
+          value={metrics.avgIntensity}
+          maxValue={40}
+          color={getQualityColor()}
+        />
+        <MeterBar
+          label="COMPL"
+          value={metrics.avgCompleteness}
+          maxValue={100}
+          color="#00ffaa"
+        />
+        <MeterBar
+          label="RES(Å)"
+          value={metrics.resolution}
+          maxValue={10}
+          color="#ff00ff"
+        />
       </div>
     </div>
   );
