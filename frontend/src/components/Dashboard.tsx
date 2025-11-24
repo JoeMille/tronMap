@@ -71,7 +71,7 @@ export default function Dashboard() {
           }
           return prev + 1;
         });
-      }, 100);
+      }, 150);
     }
 
     return () => {
