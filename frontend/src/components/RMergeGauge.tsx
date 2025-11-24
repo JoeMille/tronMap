@@ -5,12 +5,16 @@ interface RMergeGaugeProps {
   rMerge: number;
   ccHalf: number;
   mosaicity: number;
+  frameIOverSigma?: number;
+  frameCompleteness?: number;
 }
 
 export default function RMergeGauge({
   rMerge,
   ccHalf,
   mosaicity,
+  frameIOverSigma,
+  frameCompleteness,
 }: RMergeGaugeProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -49,7 +53,7 @@ export default function RMergeGauge({
     const height = canvas.height;
     const centerX = width / 2;
     const centerY = height / 2;
-    const radius = 85;
+    const radius = 150;
 
     ctx.clearRect(0, 0, width, height);
 
@@ -59,7 +63,7 @@ export default function RMergeGauge({
     const totalAngle = endAngle - startAngle;
 
     ctx.strokeStyle = "rgba(0, 217, 255, 0.1)";
-    ctx.lineWidth = 20;
+    ctx.lineWidth = 32;
     ctx.beginPath();
     ctx.arc(centerX, centerY, radius, startAngle, endAngle);
     ctx.stroke();
@@ -78,7 +82,7 @@ export default function RMergeGauge({
       const segmentEnd = startAngle + (segment.end / 0.3) * totalAngle;
 
       ctx.strokeStyle = segment.color + "40";
-      ctx.lineWidth = 18;
+      ctx.lineWidth = 30;
       ctx.beginPath();
       ctx.arc(centerX, centerY, radius, segmentStart, segmentEnd);
       ctx.stroke();
@@ -87,22 +91,22 @@ export default function RMergeGauge({
     const needleAngle = startAngle + Math.min(rMerge / 0.3, 1) * totalAngle;
 
     ctx.strokeStyle = quality.color;
-    ctx.lineWidth = 22;
+    ctx.lineWidth = 36;
     ctx.lineCap = "round";
-    ctx.shadowBlur = 20;
+    ctx.shadowBlur = 30;
     ctx.shadowColor = quality.color;
     ctx.beginPath();
     ctx.arc(centerX, centerY, radius, startAngle, needleAngle);
     ctx.stroke();
     ctx.shadowBlur = 0;
 
-    const needleLength = radius - 10;
+    const needleLength = radius - 15;
     const needleX = centerX + Math.cos(needleAngle) * needleLength;
     const needleY = centerY + Math.sin(needleAngle) * needleLength;
 
     ctx.strokeStyle = quality.color;
-    ctx.lineWidth = 3;
-    ctx.shadowBlur = 15;
+    ctx.lineWidth = 5;
+    ctx.shadowBlur = 22;
     ctx.shadowColor = quality.color;
     ctx.beginPath();
     ctx.moveTo(centerX, centerY);
@@ -110,17 +114,17 @@ export default function RMergeGauge({
     ctx.stroke();
 
     ctx.fillStyle = quality.color;
-    ctx.shadowBlur = 20;
+    ctx.shadowBlur = 30;
     ctx.beginPath();
-    ctx.arc(centerX, centerY, 6, 0, Math.PI * 2);
+    ctx.arc(centerX, centerY, 10, 0, Math.PI * 2);
     ctx.fill();
     ctx.shadowBlur = 0;
 
     const tickAngles = [0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3];
     tickAngles.forEach((value) => {
       const angle = startAngle + (value / 0.3) * totalAngle;
-      const innerRadius = radius - 15;
-      const outerRadius = radius - 5;
+      const innerRadius = radius - 25;
+      const outerRadius = radius - 10;
 
       const x1 = centerX + Math.cos(angle) * innerRadius;
       const y1 = centerY + Math.sin(angle) * innerRadius;
@@ -128,20 +132,20 @@ export default function RMergeGauge({
       const y2 = centerY + Math.sin(angle) * outerRadius;
 
       ctx.strokeStyle = "rgba(0, 217, 255, 0.6)";
-      ctx.lineWidth = 2;
+      ctx.lineWidth = 3;
       ctx.beginPath();
       ctx.moveTo(x1, y1);
       ctx.lineTo(x2, y2);
       ctx.stroke();
 
-      const labelRadius = radius - 30;
+      const labelRadius = radius - 48;
       const labelX = centerX + Math.cos(angle) * labelRadius;
       const labelY = centerY + Math.sin(angle) * labelRadius;
 
       ctx.fillStyle = "rgba(0, 217, 255, 0.7)";
-      ctx.font = "9px monospace";
+      ctx.font = "13px monospace";
       ctx.textAlign = "center";
-      ctx.fillText(value.toFixed(2), labelX, labelY + 3);
+      ctx.fillText(value.toFixed(2), labelX, labelY + 4);
     });
   }, [rMerge]);
 
@@ -151,48 +155,104 @@ export default function RMergeGauge({
 
   return (
     <div className="rmerge-gauge-container">
-      <div className="gauge-canvas-wrapper">
-        <canvas
-          ref={canvasRef}
-          width={240}
-          height={240}
-          className="gauge-canvas"
-        />
-        <div className="gauge-center-display">
-          <div className="gauge-value" style={{ color: quality.color }}>
-            {rMerge.toFixed(3)}
-          </div>
-          <div className="gauge-label">R-MERGE</div>
-          <div className="gauge-status" style={{ color: quality.color }}>
-            {quality.label}
+      <div className="gauge-top-section">
+        <div className="gauge-canvas-wrapper">
+          <canvas
+            ref={canvasRef}
+            width={400}
+            height={400}
+            className="gauge-canvas"
+          />
+          <div className="gauge-center-display">
+            <div className="gauge-value" style={{ color: quality.color }}>
+              {rMerge.toFixed(3)}
+            </div>
+            <div className="gauge-label">R-MERGE</div>
+            <div className="gauge-status" style={{ color: quality.color }}>
+              {quality.label}
+            </div>
           </div>
         </div>
-      </div>
 
-      <div className="gauge-legend">
-        <div className="legend-item">
-          <div className="legend-color" style={{ background: "#00ff88" }} />
-          <span>&lt; 0.05 EXCELLENT</span>
-        </div>
-        <div className="legend-item">
-          <div className="legend-color" style={{ background: "#00d9ff" }} />
-          <span>0.05-0.10 GOOD</span>
-        </div>
-        <div className="legend-item">
-          <div className="legend-color" style={{ background: "#ffaa00" }} />
-          <span>0.10-0.15 ACCEPTABLE</span>
-        </div>
-        <div className="legend-item">
-          <div className="legend-color" style={{ background: "#ff6600" }} />
-          <span>0.15-0.25 POOR</span>
-        </div>
-        <div className="legend-item">
-          <div className="legend-color" style={{ background: "#ff0033" }} />
-          <span>&gt; 0.25 CRITICAL</span>
+        <div className="gauge-legend">
+          <div className="legend-item">
+            <div className="legend-color" style={{ background: "#00ff88" }} />
+            <span>&lt; 0.05 EXCELLENT</span>
+          </div>
+          <div className="legend-item">
+            <div className="legend-color" style={{ background: "#00d9ff" }} />
+            <span>0.05-0.10 GOOD</span>
+          </div>
+          <div className="legend-item">
+            <div className="legend-color" style={{ background: "#ffaa00" }} />
+            <span>0.10-0.15 ACCEPTABLE</span>
+          </div>
+          <div className="legend-item">
+            <div className="legend-color" style={{ background: "#ff6600" }} />
+            <span>0.15-0.25 POOR</span>
+          </div>
+          <div className="legend-item">
+            <div className="legend-color" style={{ background: "#ff0033" }} />
+            <span>&gt; 0.25 CRITICAL</span>
+          </div>
         </div>
       </div>
 
       <div className="supplementary-metrics">
+        {frameIOverSigma && (
+          <div
+            className="metric-card"
+            style={{
+              borderColor: frameIOverSigma > 15 ? "#00ff88" : "#ff6600",
+            }}
+          >
+            <div className="metric-label">CURRENT FRAME I/σ</div>
+            <div
+              className="metric-value"
+              style={{ color: frameIOverSigma > 15 ? "#00ff88" : "#ff6600" }}
+            >
+              {frameIOverSigma.toFixed(2)}
+            </div>
+            <div
+              className="metric-status"
+              style={{ color: frameIOverSigma > 15 ? "#00ff88" : "#ff6600" }}
+            >
+              {frameIOverSigma > 20
+                ? "EXCELLENT"
+                : frameIOverSigma > 15
+                ? "GOOD"
+                : "POOR"}
+            </div>
+          </div>
+        )}
+
+        {frameCompleteness && (
+          <div
+            className="metric-card"
+            style={{
+              borderColor: frameCompleteness > 90 ? "#00ff88" : "#ff6600",
+            }}
+          >
+            <div className="metric-label">CURRENT COMPLETENESS</div>
+            <div
+              className="metric-value"
+              style={{ color: frameCompleteness > 90 ? "#00ff88" : "#ff6600" }}
+            >
+              {frameCompleteness.toFixed(1)}%
+            </div>
+            <div
+              className="metric-status"
+              style={{ color: frameCompleteness > 90 ? "#00ff88" : "#ff6600" }}
+            >
+              {frameCompleteness > 95
+                ? "EXCELLENT"
+                : frameCompleteness > 90
+                ? "GOOD"
+                : "FAIR"}
+            </div>
+          </div>
+        )}
+
         <div className="metric-card">
           <div className="metric-label">CC½</div>
           <div className="metric-value" style={{ color: ccQuality.color }}>

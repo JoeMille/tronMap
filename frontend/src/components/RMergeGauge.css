@@ -4,37 +4,26 @@
   background: rgba(0, 0, 0, 0.9);
   border: 1px solid rgba(0, 217, 255, 0.3);
   border-radius: 4px;
-  padding: 16px;
+  padding: 20px;
   overflow-y: auto;
   font-family: "Courier New", monospace;
+  display: flex;
+  flex-direction: column;
 }
 
-.gauge-header {
-  text-align: center;
+.gauge-top-section {
+  display: flex;
+  gap: 30px;
   margin-bottom: 20px;
-  border-bottom: 1px solid rgba(0, 217, 255, 0.3);
-  padding-bottom: 12px;
-}
-
-.gauge-title {
-  color: #00d9ff;
-  font-size: 13px;
-  letter-spacing: 2px;
-  font-weight: bold;
-  margin-bottom: 4px;
-}
-
-.gauge-subtitle {
-  color: rgba(0, 217, 255, 0.6);
-  font-size: 9px;
-  letter-spacing: 1.5px;
+  align-items: center;
+  justify-content: center;
 }
 
 .gauge-canvas-wrapper {
   position: relative;
-  width: 240px;
-  height: 240px;
-  margin: 0 auto 20px;
+  width: 400px;
+  height: 400px;
+  flex-shrink: 0;
 }
 
 .gauge-canvas {
@@ -48,63 +37,61 @@
   transform: translate(-50%, -50%);
   text-align: center;
   pointer-events: none;
-  margin-top: 20px;
+  margin-top: 30px;
 }
 
 .gauge-value {
-  font-size: 32px;
+  font-size: 52px;
   font-weight: bold;
-  text-shadow: 0 0 10px currentColor;
+  text-shadow: 0 0 12px currentColor;
   font-family: "Courier New", monospace;
-  letter-spacing: 1px;
+  letter-spacing: 2px;
 }
 
 .gauge-label {
-  font-size: 10px;
+  font-size: 13px;
   color: rgba(0, 217, 255, 0.8);
-  margin-top: 4px;
-  letter-spacing: 1.5px;
+  margin-top: 6px;
+  letter-spacing: 2px;
 }
 
 .gauge-status {
-  font-size: 11px;
+  font-size: 15px;
   font-weight: bold;
-  margin-top: 6px;
-  letter-spacing: 1px;
-  text-shadow: 0 0 8px currentColor;
+  margin-top: 8px;
+  letter-spacing: 1.5px;
+  text-shadow: 0 0 10px currentColor;
 }
 
 .gauge-legend {
   background: rgba(0, 0, 0, 0.5);
   border: 1px solid rgba(0, 217, 255, 0.2);
-  padding: 12px;
-  margin-bottom: 16px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 14px;
 }
 
 .legend-item {
   display: flex;
   align-items: center;
-  margin-bottom: 8px;
-  font-size: 9px;
+  font-size: 12px;
   color: rgba(0, 217, 255, 0.8);
-  letter-spacing: 0.5px;
-}
-
-.legend-item:last-child {
-  margin-bottom: 0;
+  letter-spacing: 0.8px;
 }
 
 .legend-color {
-  width: 20px;
-  height: 10px;
-  margin-right: 8px;
+  width: 28px;
+  height: 14px;
+  margin-right: 12px;
   border: 1px solid rgba(255, 255, 255, 0.2);
-  box-shadow: 0 0 4px currentColor;
+  box-shadow: 0 0 5px currentColor;
 }
 
 .supplementary-metrics {
   display: flex;
-  gap: 12px;
+  gap: 16px;
   margin-bottom: 16px;
 }
 
@@ -112,26 +99,26 @@
   flex: 1;
   background: rgba(0, 0, 0, 0.6);
   border: 1px solid rgba(0, 217, 255, 0.3);
-  padding: 12px;
+  padding: 14px;
   text-align: center;
 }
 
 .metric-label {
-  font-size: 9px;
+  font-size: 10px;
   color: rgba(0, 217, 255, 0.7);
   letter-spacing: 1.5px;
   margin-bottom: 6px;
 }
 
 .metric-value {
-  font-size: 20px;
+  font-size: 24px;
   font-weight: bold;
-  text-shadow: 0 0 8px currentColor;
-  margin-bottom: 4px;
+  text-shadow: 0 0 9px currentColor;
+  margin-bottom: 5px;
 }
 
 .metric-status {
-  font-size: 9px;
+  font-size: 10px;
   font-weight: bold;
   letter-spacing: 1px;
   margin-bottom: 8px;
@@ -150,8 +137,7 @@
 .gauge-info {
   background: rgba(0, 217, 255, 0.05);
   border: 1px solid rgba(0, 217, 255, 0.2);
-  padding: 12px;
-  margin-top: 16px;
+  padding: 14px;
 }
 
 .info-header {
@@ -164,7 +150,7 @@
 
 .info-text {
   color: rgba(0, 217, 255, 0.9);
-  font-size: 11px;
+  font-size: 12px;
   margin-bottom: 8px;
   text-align: center;
   font-family: "Times New Roman", serif;

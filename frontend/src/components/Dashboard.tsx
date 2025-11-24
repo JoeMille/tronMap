@@ -89,6 +89,28 @@ export default function Dashboard() {
   const currentFrameMetrics = metricsData?.frames[currentFrame - 1];
   const historicalData = metricsData?.frames.slice(0, currentFrame) || [];
 
+  // Calculate frame-specific quality metrics based on I/sigma
+  const frameRMerge =
+    metricsData && currentFrameMetrics
+      ? metricsData.overall_statistics.r_merge *
+        (25 / currentFrameMetrics.overall_i_over_sigma)
+      : metricsData?.overall_statistics.r_merge || 0;
+
+  const frameCCHalf =
+    metricsData && currentFrameMetrics
+      ? Math.max(
+          0.95,
+          metricsData.overall_statistics.cc_half -
+            (25 - currentFrameMetrics.overall_i_over_sigma) * 0.002
+        )
+      : metricsData?.overall_statistics.cc_half || 0;
+
+  const frameMosaicity =
+    metricsData && currentFrameMetrics
+      ? metricsData.overall_statistics.mosaicity *
+        (1 + (25 - currentFrameMetrics.overall_i_over_sigma) * 0.01)
+      : metricsData?.overall_statistics.mosaicity || 0;
+
   return (
     <div className="dashboard-container">
       <Header status={status} datasetName="Lysozyme Crystal - Good Dataset" />
@@ -187,11 +209,13 @@ export default function Dashboard() {
               <h3>Quality Assessment</h3>
             </div>
             <div className="canvas-content" style={{ padding: 0 }}>
-              {metricsData?.overall_statistics && (
+              {metricsData?.overall_statistics && currentFrameMetrics && (
                 <RMergeGauge
-                  rMerge={metricsData.overall_statistics.r_merge}
-                  ccHalf={metricsData.overall_statistics.cc_half}
-                  mosaicity={metricsData.overall_statistics.mosaicity}
+                  rMerge={frameRMerge}
+                  ccHalf={frameCCHalf}
+                  mosaicity={frameMosaicity}
+                  frameIOverSigma={currentFrameMetrics.overall_i_over_sigma}
+                  frameCompleteness={currentFrameMetrics.overall_completeness}
                 />
               )}
             </div>
