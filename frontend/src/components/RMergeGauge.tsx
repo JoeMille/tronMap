@@ -151,11 +151,6 @@ export default function RMergeGauge({
 
   return (
     <div className="rmerge-gauge-container">
-      <div className="gauge-header">
-        <div className="gauge-title">◆ DATA QUALITY METRICS</div>
-        <div className="gauge-subtitle">MERGING STATISTICS</div>
-      </div>
-
       <div className="gauge-canvas-wrapper">
         <canvas
           ref={canvasRef}
