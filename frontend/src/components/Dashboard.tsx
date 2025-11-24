@@ -4,6 +4,7 @@ import Footer from "./Footer";
 import DiffractionViewer from "./DiffractionViewer";
 import MetricsGraph from "./MetricsGraph";
 import CrystalLatticeViewer from "./CrystalLatticeViewer";
+import RMergeGauge from "./RMergeGauge";
 import "./Header.css";
 import "./Footer.css";
 import "./Dashboard.css";
@@ -178,6 +179,21 @@ export default function Dashboard() {
                 currentFrame={currentFrame}
                 isPlaying={isPlaying}
               />
+            </div>
+          </div>
+
+          <div className="canvas-panel canvas-panel-gauge">
+            <div className="panel-header">
+              <h3>Quality Assessment</h3>
+            </div>
+            <div className="canvas-content" style={{ padding: 0 }}>
+              {metricsData?.overall_statistics && (
+                <RMergeGauge
+                  rMerge={metricsData.overall_statistics.r_merge}
+                  ccHalf={metricsData.overall_statistics.cc_half}
+                  mosaicity={metricsData.overall_statistics.mosaicity}
+                />
+              )}
             </div>
           </div>
         </div>

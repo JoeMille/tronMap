@@ -59,6 +59,14 @@
   transform: translateY(-2px);
 }
 
+.canvas-panel-lattice {
+  grid-column: span 7;
+}
+
+.canvas-panel-gauge {
+  grid-column: span 3;
+}
+
 .panel-header {
   background: rgba(0, 0, 0, 0.4);
   padding: 0.4rem 0.8rem;
