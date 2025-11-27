@@ -1,4 +1,4 @@
-Core Visual Components (in order of wow-factor)
+Core Visual Components todo 
 
 Dataset Selector (dropdown: “Good lysozyme”, “Bad – ice rings”, “Bad – radiation damage”)
 Live Diffraction Image Viewer
@@ -11,11 +11,10 @@ Expanding Resolution Rings overlay on the diffraction image
 Concentric cyan circles labeled 8Å, 4Å, 2Å, 1.6Å, 1.5Å
 Fill solid when that shell’s I/σ > 2
 
-Spot Prediction Overlay (optional but insane)
+Spot Prediction Overlay
 Tiny red crosses where spots are expected
 Real spot hits cross → flash green for 300ms
 
-Six Big Glowing Gauges (semi-circle or radial)
 Resolution (Å) – green when <1.8
 I/σ(I) – green when >15
 R-merge – green when <0.12
@@ -29,7 +28,7 @@ X-axis: resolution bins
 Y-axis: I/σ per shell
 Line animates left-to-right as data arrives
 
-3D Reciprocal Lattice Viewer (@react-three/fiber)
+3D Reciprocal Lattice Viewer (@react-three/fiber) gone with 3
 OrbitControls + auto-rotate
 Predicted spots = faint blue spheres
 Observed spots = bright pulsing green
@@ -40,7 +39,7 @@ Historical Runs Table
 Columns: Date, Name, Resolution, Completeness, Thumbnail
 Click row → load that dataset
 
-Phase 4 – Bad Dataset Effects (the “fault diagnosis” flex)
+Phase 4 – fault diagnosis
 
 Ice rings → glowing red circles + “ICE CONTAMINATION” warning
 Radiation damage → later frames fade + spots blur + metrics crash
