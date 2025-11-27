@@ -2,7 +2,7 @@ export default function Footer() {
   return (
     <footer className="app-footer">
       <div className="footer-left">
-        <span className="footer-label">Diamond Light Source</span>
+        <span className="footer-label">Light Source</span>
         <span className="separator">•</span>
         <span className="footer-label">Beamline I03</span>
         <span className="separator">•</span>

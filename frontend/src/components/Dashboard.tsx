@@ -43,6 +43,8 @@ export default function Dashboard() {
   const [currentFrame, setCurrentFrame] = useState(1);
   const [isPlaying, setIsPlaying] = useState(false);
   const [metricsData, setMetricsData] = useState<MetricsData | null>(null);
+  const [iceAnalysis, setIceAnalysis] = useState<any>(null);
+  const [analyzingIce, setAnalyzingIce] = useState(false);
   const datasetPath = "/static/data/lysozyme_good";
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -81,6 +83,27 @@ export default function Dashboard() {
     };
   }, [isPlaying, metricsData]);
 
+  const analyzeIceRings = async () => {
+    setAnalyzingIce(true);
+    try {
+      const response = await fetch("http://localhost:8000/api/analyze-ice/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          dataset: "lysozyme_good",
+          frame: currentFrame,
+        }),
+      });
+
+      const data = await response.json();
+      setIceAnalysis(data);
+    } catch (error) {
+      console.error("Ice analysis failed:", error);
+    } finally {
+      setAnalyzingIce(false);
+    }
+  };
+
   const frameUrl = `${datasetPath}/frame_${String(currentFrame).padStart(
     4,
     "0"
@@ -89,7 +112,6 @@ export default function Dashboard() {
   const currentFrameMetrics = metricsData?.frames[currentFrame - 1];
   const historicalData = metricsData?.frames.slice(0, currentFrame) || [];
 
-  // Calculate frame-specific quality metrics based on I/sigma
   const frameRMerge =
     metricsData && currentFrameMetrics
       ? metricsData.overall_statistics.r_merge *
@@ -148,13 +170,25 @@ export default function Dashboard() {
                   onClick={() => setIsPlaying(!isPlaying)}
                   className="btn-primary"
                 >
-                  {isPlaying ? "⏸ PAUSE" : "▶ PLAY"}
+                  {isPlaying ? "PAUSE" : "PLAY"}
                 </button>
                 <button
                   onClick={() => setCurrentFrame(1)}
                   className="btn-secondary"
                 >
-                  ⏮ RESET
+                  RESET
+                </button>
+                <button
+                  onClick={analyzeIceRings}
+                  className="btn-secondary"
+                  disabled={analyzingIce}
+                  style={{
+                    background: iceAnalysis?.ice_detected
+                      ? "linear-gradient(135deg, #ff3333, #ff6600)"
+                      : "linear-gradient(135deg, #00d9ff, #00ff88)",
+                  }}
+                >
+                  {analyzingIce ? "SCANNING..." : "CHECK ICE"}
                 </button>
               </div>
             </div>
@@ -217,6 +251,72 @@ export default function Dashboard() {
               )}
             </div>
           </div>
+
+          {iceAnalysis && (
+            <div
+              className={`canvas-panel ice-analysis-panel ${
+                iceAnalysis.ice_detected ? "ice-detected" : "ice-clean"
+              }`}
+            >
+              <div className="panel-header">
+                <h3>❄️ ICE RING ANALYSIS - Frame {currentFrame}</h3>
+              </div>
+              <div className="ice-analysis-content">
+                <div className="ice-status-section">
+                  <div
+                    className={`ice-status-title ${
+                      iceAnalysis.ice_detected ? "contaminated" : "clean"
+                    }`}
+                  >
+                    {iceAnalysis.status}
+                  </div>
+                  <div className="ice-contamination-level">
+                    Max Contamination: {iceAnalysis.max_contamination}%
+                  </div>
+                  <div className="ice-recommendation">
+                    {iceAnalysis.recommendation}
+                  </div>
+                </div>
+
+                {iceAnalysis.ring_count > 0 && (
+                  <div className="ice-rings-section">
+                    <h4 className="ice-rings-header">
+                      Detected Rings ({iceAnalysis.ring_count}):
+                    </h4>
+                    {iceAnalysis.detected_rings.map(
+                      (ring: any, idx: number) => (
+                        <div
+                          key={idx}
+                          className={`ice-ring-card ${
+                            ring.contamination_level > 30
+                              ? "severe"
+                              : ring.contamination_level > 10
+                              ? "moderate"
+                              : "minor"
+                          }`}
+                        >
+                          <span className="ice-ring-resolution">
+                            {ring.resolution}Å resolution
+                          </span>
+                          <span
+                            className={`ice-ring-contamination ${
+                              ring.contamination_level > 30
+                                ? "severe"
+                                : ring.contamination_level > 10
+                                ? "moderate"
+                                : "minor"
+                            }`}
+                          >
+                            {ring.contamination_level.toFixed(1)}% contamination
+                          </span>
+                        </div>
+                      )
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </main>
 
@@ -264,7 +364,7 @@ function DataOutput({
             <div className="data-section-title">RESOLUTION SHELLS</div>
             {metrics.resolution_shells.slice(0, 4).map((shell) => (
               <div key={shell.resolution} className="data-line shell-data">
-                <span className="data-label">{shell.resolution}Å:</span>
+                <span className="data-label">{shell.resolution}A:</span>
                 <span className="data-value">
                   I/σ={shell.i_over_sigma.toFixed(1)} |{" "}
                   {shell.completeness.toFixed(0)}%
@@ -279,7 +379,7 @@ function DataOutput({
             <div className="data-section-title">OVERALL STATISTICS</div>
             <div className="data-line">
               <span className="data-label">RESOLUTION:</span>
-              <span className="data-value">{overallStats.resolution}Å</span>
+              <span className="data-value">{overallStats.resolution}A</span>
             </div>
             <div className="data-line">
               <span className="data-label">SPACE GROUP:</span>

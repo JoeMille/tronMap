@@ -348,3 +348,113 @@
     min-width: auto;
   }
 }
+
+/* ice ring analysis */
+
+.ice-analysis-panel {
+  grid-column: span 12;
+  max-height: 400px;
+}
+
+.ice-analysis-panel.ice-detected {
+  background: rgba(255, 51, 51, 0.1);
+  border-color: #ff3333;
+}
+
+.ice-analysis-panel.ice-clean {
+  background: rgba(0, 255, 136, 0.1);
+  border-color: #00ff88;
+}
+
+.ice-analysis-content {
+  padding: 1.5rem;
+  display: flex;
+  gap: 2rem;
+  align-items: flex-start;
+}
+
+.ice-status-section {
+  flex: 1;
+  min-width: 250px;
+}
+
+.ice-status-title {
+  font-size: 2.5rem;
+  font-weight: bold;
+  margin-bottom: 1rem;
+}
+
+.ice-status-title.contaminated {
+  color: #ff3333;
+}
+
+.ice-status-title.clean {
+  color: #00ff88;
+}
+
+.ice-contamination-level {
+  font-size: 1rem;
+  color: #00d9ff;
+  margin-bottom: 0.8rem;
+}
+
+.ice-recommendation {
+  color: #fff;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.ice-rings-section {
+  flex: 2;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.ice-rings-header {
+  color: #00d9ff;
+  margin-bottom: 1rem;
+  font-size: 1rem;
+}
+
+.ice-ring-card {
+  background: rgba(0, 0, 0, 0.5);
+  padding: 0.8rem;
+  margin-bottom: 0.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: monospace;
+  font-size: 0.85rem;
+}
+
+.ice-ring-card.severe {
+  border-left: 4px solid #ff3333;
+}
+
+.ice-ring-card.moderate {
+  border-left: 4px solid #ffaa00;
+}
+
+.ice-ring-card.minor {
+  border-left: 4px solid #00ff88;
+}
+
+.ice-ring-resolution {
+  font-weight: bold;
+}
+
+.ice-ring-contamination {
+  font-weight: bold;
+}
+
+.ice-ring-contamination.severe {
+  color: #ff3333;
+}
+
+.ice-ring-contamination.moderate {
+  color: #ffaa00;
+}
+
+.ice-ring-contamination.minor {
+  color: #00ff88;
+}

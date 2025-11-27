@@ -17,10 +17,11 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 from django.views.generic import TemplateView
-from datasets.views import list_datasets
+from datasets.views import list_datasets, analyze_ice_rings
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/datasets/', list_datasets, name='list_datasets'),
-    path('', TemplateView.as_view(template_name='index.html'))
+    path('api/analyze-ice/', analyze_ice_rings, name='analyze_ice'),
+    path('', TemplateView.as_view(template_name='index.html')),
 ]

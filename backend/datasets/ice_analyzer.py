@@ -3,25 +3,24 @@ import numpy as np
 from scipy.signal import find_peaks 
 from pathlib import Path
 
-# Detext ice contamination rings in x-ray diffraction images
 class IceRingAnalyzer:
     ICE_RESOLUTIONS = [3.9, 3.7, 3.4, 2.7]
 
     def __init__(self, image_path, center_x=None, center_y=None, pixel_size=0.075):
         self.image = cv2.imread(str(image_path), cv2.IMREAD_GRAYSCALE)
         if self.image is None:
-            raise ValueError(f"cannot load image: {image_path}")
+            raise ValueError(f"Cannot load image: {image_path}")
         
         self.height, self.width = self.image.shape
         self.center_x = center_x or self.width // 2
         self.center_y = center_y or self.height // 2
         self.pixel_size = pixel_size
-    
+
     def calculate_radial_profile(self, num_bins=500):
         y, x = np.ogrid[:self.height, :self.width]
         radius = np.sqrt((x - self.center_x)**2 + (y - self.center_y)**2)
-        max_radius = int(np.sprt(self.width**2 + self.height**2) / 2)
-        radial_bins = np.linespace(0, max_radius, num_bins)
+        max_radius = int(np.sqrt(self.width**2 + self.height**2) / 2)  
+        radial_bins = np.linspace(0, max_radius, num_bins) 
         radius_indices = np.digitize(radius.ravel(), radial_bins)
 
         radial_profile = []
@@ -34,18 +33,18 @@ class IceRingAnalyzer:
                 radial_profile.append(0)
 
         return radial_bins[:-1], np.array(radial_profile)
-    
-    ## find peaks in radial profile
-    def detect_ice_rings(self, sensitivity=2.0):
+
+    def detect_ice_rings(self, sensitivity=1.5):
         radii, profile = self.calculate_radial_profile()
 
         from scipy.ndimage import gaussian_filter1d
-        smoothed = gaussian_filter1d(profile, sigma=5)
+        smoothed = gaussian_filter1d(profile, sigma=3)
 
         peaks, properties = find_peaks(
             smoothed, 
             prominence=np.std(smoothed) * sensitivity,
-            distance=10
+            distance=5,
+            height=np.mean(smoothed) * 1.1
         )
 
         detected_rings = []
@@ -55,8 +54,8 @@ class IceRingAnalyzer:
             intensity = smoothed[peak_idx]
             
             for ice_res in self.ICE_RESOLUTIONS:
-                expected_radius = self.resolution_to_radius(ice_res)
-                if abs(radius_pixels - expected_radius) < 20:
+                expected_radius = self._resolution_to_radius(ice_res)  
+                if abs(radius_pixels - expected_radius) < 30:
                     detected_rings.append({
                         'resolution': ice_res,
                         'radius_pixels': float(radius_pixels),
@@ -64,10 +63,9 @@ class IceRingAnalyzer:
                         'contamination_level': self._calculate_contamination(intensity, profile)
                     })
                     break
-                
-                return detected_rings
-    
-    # convert resolution to approximate pixel radius
+        
+        return detected_rings  
+
     def _resolution_to_radius(self, resolution_angstroms):
         return (10.0 / resolution_angstroms) * 50
     
@@ -85,7 +83,7 @@ class IceRingAnalyzer:
         y_coords = self.center_y + radius_pixels * np.sin(angles)
 
         return list(zip(x_coords.tolist(), y_coords.tolist()))
-    
+
     def analyze(self):
         detected_rings = self.detect_ice_rings()
 
@@ -108,12 +106,12 @@ class IceRingAnalyzer:
             'detected_rings': detected_rings,
             'ring_overlays': ring_overlays,
             'status': self._get_status(max_contamination),
-            'reccomendation': self.get_reccomendation(max_contamination)
+            'recommendation': self._get_recommendation(max_contamination) 
         }
-    
+
     def _get_warning_color(self, contamination):
         if contamination < 10:
-            return '#00ff88'  # oK
+            return '#00ff88'  # OK
         elif contamination < 30:
             return '#ffaa00'  # warning
         else:
@@ -127,12 +125,10 @@ class IceRingAnalyzer:
         else:
             return 'CONTAMINATED'
         
-    def _get_reccomendation(self, contamination):
+    def _get_recommendation(self, contamination):  
         if contamination < 10:
-            return 'No ice detected, adequate data quality'
+            return 'No ice detected. Data quality adequate.'
         elif contamination < 30:
-            return 'Minor ice contamination'
+            return 'Minor ice contamination detected. Monitor data quality.'
         else: 
-            return 'Severe ice contamination'
-
-    
+            return 'Severe ice contamination detected. Consider re-mounting crystal.'
