@@ -1,0 +1,48 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Django
+*.log
+db.sqlite3
+db.sqlite3-journal
+/media
+/staticfiles
+
+# ENV
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# VENV
+venv/
+env/
+ENV/
+.venv
+
+# testing
+.coverage
+htmlcov/
+.pytest_cache/
+.tox/
+
+# Data files (llarge diffraction sets)
+static/data/*/
+!static/data/.gitkeep
+
+
