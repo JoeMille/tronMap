@@ -1,3 +1,4 @@
 source.txt
 test_lists.txt
 **/__pycache__/
+backend/static/data
