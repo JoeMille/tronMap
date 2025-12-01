@@ -10,33 +10,52 @@ cd ../frontend
 npm ci
 npm run build
 
-echo "📂 Copying frontend to staticfiles..."
+echo "📂 Checking frontend build output..."
+if [ ! -f "dist/index.html" ]; then
+    echo "❌ ERROR: dist/index.html not found after build!"
+    exit 1
+fi
+
+echo "✅ Frontend build successful:"
+ls -lah dist/
+echo ""
+echo "Assets:"
+ls -lah dist/assets/ || echo "No assets folder"
+
+echo "📂 Setting up staticfiles..."
 cd ../backend
 
 # Remove old staticfiles
 rm -rf staticfiles
-
-# Create staticfiles directory
 mkdir -p staticfiles
 
-# Copy ALL frontend build output directly to staticfiles
+# Copy all files from dist to staticfiles
+echo "Copying dist/* to staticfiles/..."
 cp -r ../frontend/dist/* staticfiles/
 
-# Ensure index.html is at root of staticfiles
-cp ../frontend/dist/index.html staticfiles/index.html
+# Verify index.html was copied
+if [ ! -f "staticfiles/index.html" ]; then
+    echo "❌ ERROR: index.html not found in staticfiles after copy!"
+    exit 1
+fi
 
-echo "📂 Verifying static files structure..."
-ls -la staticfiles/
-echo "Assets directory:"
-ls -la staticfiles/assets/ || echo "No assets directory found"
+echo "✅ Staticfiles structure:"
+ls -lah staticfiles/
+echo ""
+echo "Staticfiles assets:"
+ls -lah staticfiles/assets/ || echo "No assets folder"
 
-echo "📂 Running Django collectstatic..."
-# This should be a no-op since files are already in staticfiles
+echo "📂 Running collectstatic..."
 python manage.py collectstatic --noinput --clear
+
+echo "📂 Final verification:"
+ls -lah staticfiles/
+if [ ! -f "staticfiles/index.html" ]; then
+    echo "❌ ERROR: index.html missing after collectstatic!"
+    exit 1
+fi
 
 echo "🗄️ Running migrations..."
 python manage.py migrate --noinput
 
 echo "✅ Build complete!"
-echo "Final staticfiles structure:"
-ls -R staticfiles/
