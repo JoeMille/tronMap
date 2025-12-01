@@ -48,6 +48,7 @@ export default function Dashboard() {
   const datasetPath = "/static/data/lysozyme_good";
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Load metrics from static JSON file
   useEffect(() => {
     fetch(`${datasetPath}/metrics.json`)
       .then((res) => {
@@ -58,6 +59,7 @@ export default function Dashboard() {
       .catch((err) => console.error("Failed to load metrics:", err));
   }, []);
 
+  // Animation loop for play functionality
   useEffect(() => {
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
@@ -83,10 +85,12 @@ export default function Dashboard() {
     };
   }, [isPlaying, metricsData]);
 
+  // Ice ring analysis - uses relative API path
   const analyzeIceRings = async () => {
     setAnalyzingIce(true);
     try {
-      const response = await fetch("http://localhost:8000/api/analyze-ice/", {
+      // Relative path - works in dev (proxied) and production (same origin)
+      const response = await fetch("/api/analyze-ice/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -95,10 +99,22 @@ export default function Dashboard() {
         }),
       });
 
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+
       const data = await response.json();
       setIceAnalysis(data);
     } catch (error) {
       console.error("Ice analysis failed:", error);
+      setIceAnalysis({
+        ice_detected: false,
+        status: "ANALYSIS FAILED",
+        recommendation: "Unable to connect to backend API",
+        ring_count: 0,
+        max_contamination: 0,
+        detected_rings: [],
+      });
     } finally {
       setAnalyzingIce(false);
     }
@@ -112,6 +128,7 @@ export default function Dashboard() {
   const currentFrameMetrics = metricsData?.frames[currentFrame - 1];
   const historicalData = metricsData?.frames.slice(0, currentFrame) || [];
 
+  // Calculate frame-specific quality metrics
   const frameRMerge =
     metricsData && currentFrameMetrics
       ? metricsData.overall_statistics.r_merge *
