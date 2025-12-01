@@ -9,11 +9,18 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/datasets/', list_datasets, name='list_datasets'),
     path('api/analyze-ice/', analyze_ice_rings, name='analyze_ice'),
-    
-    # Serve frontend for all other routes
-    re_path(r'^.*$', TemplateView.as_view(template_name='index.html'), name='frontend'),
 ]
 
-# Serve static files in development
-if settings.DEBUG:
+# Static files (highest priority - before catch-all)
+if not settings.DEBUG:
+    # In production, let Whitenoise handle static files
+    # No need for static() helper - Whitenoise middleware handles it
+    pass
+else:
+    # In development, serve static files
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+
+# Catch-all LAST: serve React index.html only for routes that don't match above
+urlpatterns += [
+    re_path(r'^(?!static/)(?!assets/).*$', TemplateView.as_view(template_name='index.html')),
+]

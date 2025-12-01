@@ -3,10 +3,16 @@ import react from "@vitejs/plugin-react";
 
 export default defineConfig({
   plugins: [react()],
-  base: "/",
+  base: "/", // Root path - assets will be /assets/...
   build: {
     outDir: "dist",
     assetsDir: "assets",
+    manifest: false, // Don't need manifest.json
+    rollupOptions: {
+      output: {
+        manualChunks: undefined, // Single bundle for simplicity
+      },
+    },
   },
   server: {
     proxy: {

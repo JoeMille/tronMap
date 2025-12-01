@@ -116,21 +116,28 @@ USE_I18N = True
 USE_TZ = True
 
 
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/5.2/howto/static-files/
-
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
-STATICFILES_DIRS = [
-    BASE_DIR / 'static',
-]
 
-# Whitenoise storage
+# IMPORTANT: Remove STATICFILES_DIRS in production
+# Django collectstatic copies everything to STATIC_ROOT
+# Having both causes conflicts
+STATICFILES_DIRS = []
+
+# Whitenoise configuration
 STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
     "staticfiles": {
         "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
     },
 }
+
+# Whitenoise settings for serving index.html at root
+WHITENOISE_ROOT = STATIC_ROOT
+WHITENOISE_INDEX_FILE = True  # Serve index.html for directory requests
+WHITENOISE_AUTOREFRESH = DEBUG  # Auto-reload static files in dev
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
