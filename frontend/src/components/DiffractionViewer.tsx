@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useState, useRef } from "react";
 import "./DiffractionViewer.css";
 
 interface ResolutionShell {
@@ -13,7 +13,7 @@ interface DiffractionViewerProps {
   frameNumber: number;
   totalFrames: number;
   onFrameChange?: (frame: number) => void;
-  isPlaying: boolean;
+  isPlaying: boolean; // Keep this in interface even if unused
   resolutionShells?: ResolutionShell[];
   overallResolution?: number;
 }
@@ -23,10 +23,8 @@ export default function DiffractionViewer({
   frameNumber,
   totalFrames,
   onFrameChange,
-  isPlaying,
-  resolutionShells,
-  overallResolution,
-}: DiffractionViewerProps) {
+}: // Don't destructure unused props to avoid TS6133
+DiffractionViewerProps) {
   const [zoom, setZoom] = useState(1.5);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
