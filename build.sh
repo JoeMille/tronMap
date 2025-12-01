@@ -22,24 +22,28 @@ mkdir -p staticfiles
 # Copy frontend build
 cp -r ../frontend/dist/* staticfiles/
 
-# Copy diffraction data to staticfiles
-echo "📂 Copying diffraction data..."
-mkdir -p staticfiles/data
-cp -r ../simulations/lysozyme_good staticfiles/data/
+# Data files are already in static/data/ from testImage.py
+# Just verify they exist
+echo "📂 Verifying diffraction data..."
+if [ ! -d "static/data/lysozyme_good" ]; then
+    echo "❌ ERROR: Diffraction images not generated!"
+    exit 1
+fi
 
-echo "📂 Verifying data files..."
-if [ ! -f "staticfiles/data/lysozyme_good/metrics.json" ]; then
+if [ ! -f "static/data/lysozyme_good/metrics.json" ]; then
     echo "❌ ERROR: metrics.json missing!"
     exit 1
 fi
 
-echo "✅ Data files:"
-ls -lah staticfiles/data/lysozyme_good/ | head -10
+echo "✅ Found $(ls static/data/lysozyme_good/frame_*.png 2>/dev/null | wc -l) diffraction frames"
+
+# Copy static/data to staticfiles for serving
+cp -r static/data staticfiles/
 
 echo "📂 Running collectstatic (without post-processing)..."
 python manage.py collectstatic --noinput --no-post-process
 
-echo "📂 Final verification:"
+echo "📂 Final verification..."
 ls -lah staticfiles/ | head -20
 if [ ! -f "staticfiles/index.html" ]; then
     echo "❌ ERROR: index.html missing!"
@@ -50,5 +54,4 @@ echo "🗄️ Running migrations..."
 python manage.py migrate --noinput
 
 echo "✅ Build complete!"
-echo "📊 Total static files:"
-du -sh staticfiles/
+echo "📊 Staticfiles size: $(du -sh staticfiles/ | cut -f1)"
