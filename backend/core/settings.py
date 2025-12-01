@@ -124,20 +124,19 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 # Having both causes conflicts
 STATICFILES_DIRS = []
 
-# Whitenoise configuration
 STORAGES = {
     "default": {
         "BACKEND": "django.core.files.storage.FileSystemStorage",
     },
     "staticfiles": {
-        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
     },
 }
 
-# Whitenoise settings for serving index.html at root
-WHITENOISE_ROOT = STATIC_ROOT
-WHITENOISE_INDEX_FILE = True  # Serve index.html for directory requests
-WHITENOISE_AUTOREFRESH = DEBUG  # Auto-reload static files in dev
+# Let Whitenoise handle serving, not storage
+WHITENOISE_USE_FINDERS = False
+WHITENOISE_AUTOREFRESH = False
+WHITENOISE_INDEX_FILE = True
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
