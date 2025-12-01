@@ -1,0 +1,102 @@
+.crystal-lattice-container {
+  width: 100%;
+  height: 560px;
+  position: relative;
+  background: #000;
+  border-radius: 8px;
+  border: 1px solid #333;
+  overflow: hidden;
+}
+
+.crystal-lattice-info {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  color: #00d9ff;
+  font-family: "Courier New", monospace;
+  font-size: 12px;
+  text-shadow: 0 0 10px rgba(0, 217, 255, 0.8);
+  z-index: 10;
+  background: rgba(0, 0, 0, 0.7);
+  padding: 8px 12px;
+  border-radius: 4px;
+  border: 1px solid #00d9ff;
+}
+
+.crystal-lattice-title {
+  font-weight: bold;
+}
+
+.crystal-lattice-status {
+  font-size: 10px;
+  color: #888;
+  margin-top: 4px;
+}
+
+.canvas-panel-lattice {
+  grid-column: span 8;
+}
+
+.metrics-panel {
+  position: absolute;
+  bottom: 24px;
+  right: 24px;
+  background: rgba(0, 0, 0, 0.85);
+  border: 1px solid rgba(0, 217, 255, 0.4);
+  padding: 16px 20px;
+  backdrop-filter: blur(6px);
+  min-width: 220px;
+  box-shadow: 0 4px 12px rgba(0, 217, 255, 0.15);
+}
+
+.metrics-header {
+  font-size: 11px;
+  font-family: monospace;
+  color: #00d9ff;
+  margin-bottom: 12px;
+  letter-spacing: 1.5px;
+  border-bottom: 1px solid rgba(0, 217, 255, 0.3);
+  padding-bottom: 6px;
+}
+
+.meter-bar {
+  margin-bottom: 14px;
+}
+
+.meter-label {
+  font-size: 10px;
+  font-family: monospace;
+  color: #00d9ff;
+  margin-bottom: 4px;
+  letter-spacing: 0.8px;
+}
+
+.meter-container {
+  width: 180px;
+  height: 14px;
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(0, 217, 255, 0.4);
+  position: relative;
+  overflow: hidden;
+}
+
+.meter-fill {
+  height: 100%;
+  transition: width 0.3s ease;
+}
+
+.meter-grid {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: repeating-linear-gradient(
+    90deg,
+    transparent,
+    transparent 4px,
+    rgba(0, 0, 0, 0.4) 4px,
+    rgba(0, 0, 0, 0.4) 6px
+  );
+  pointer-events: none;
+}
